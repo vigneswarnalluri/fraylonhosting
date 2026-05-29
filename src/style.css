@@ -15,6 +15,7 @@
 
 html {
   scroll-behavior: smooth;
+  max-width: 100%;
 }
 
 * {
@@ -28,7 +29,8 @@ body {
   color: var(--mw-black);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  max-width: 100%;
+  overflow-x: hidden; /* Prevent horizontal scrollbars on desktop while keeping sticky headers functional */
 }
 
 .container {
@@ -79,8 +81,8 @@ ul {
 .mw-header {
   background: var(--mw-white);
   border-bottom: 1px solid var(--mw-border);
-  position: sticky;
-  top: 0;
+  position: sticky !important;
+  top: 0 !important;
   z-index: 1000;
   padding: 15px 0;
 }
@@ -975,6 +977,44 @@ ul {
   width: 100%;
   margin-bottom: 20px;
   padding: 12px;
+  border-radius: 8px; /* Force consistent 8px border-radius for all pricing card buttons */
+}
+
+/* Specific styling for the outline buttons on the pricing cards */
+.mw-pricing-card .btn.btn-outline-blue {
+  border: 1px solid var(--mw-blue);
+  color: var(--mw-blue);
+  background: transparent;
+  border-radius: 8px;
+  font-weight: 600;
+  box-shadow: none;
+  transition: var(--mw-transition);
+}
+
+.mw-pricing-card .btn.btn-outline-blue:hover {
+  background-color: var(--mw-blue);
+  color: var(--mw-white);
+  transform: none;
+}
+
+/* Specific styling for the Premium solid blue button on the pricing card */
+.mw-pricing-card .btn.btn-mw-primary {
+  background: var(--mw-blue);
+  color: var(--mw-white);
+  border-radius: 8px;
+  box-shadow: none;
+  border: none;
+  font-weight: 700;
+  font-size: 15px; /* Same text size as outline buttons for visual alignment */
+  transition: var(--mw-transition);
+  transform: none; /* No vertical lift */
+}
+
+.mw-pricing-card .btn.btn-mw-primary:hover {
+  background: var(--mw-blue-dark);
+  color: var(--mw-white);
+  transform: none;
+  box-shadow: none;
 }
 
 .renewal-guarantee {
@@ -1912,19 +1952,22 @@ ul {
 }
 
 .comparison-table thead {
-  position: sticky;
-  top: 80px; /* Offset for the main site header */
-  z-index: 20;
-  background: #ffffff;
+  /* position: sticky is applied directly to th elements inside thead for cross-browser reliability */
 }
 
 .comparison-table thead th {
+  position: sticky !important;
+  top: 63px !important;
+  z-index: 20;
   background: #ffffff;
   border-bottom: 1px solid #f1f5f9;
 }
 
 .comparison-table thead th.col-fraylon.highlighted {
   background: #f0f7ff;
+  position: sticky !important;
+  top: 63px !important;
+  z-index: 21;
 }
 
 .comparison-table th,
@@ -5064,110 +5107,80 @@ main {
 }
 
 .audience-container {
-  width: 100%;
-  max-width: none;
-  padding: 0;
-  margin: 0;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
 }
 
 .audience-title {
   font-size: 42px;
   font-weight: 800;
   color: #1e293b;
-  margin-bottom: 60px;
+  margin-bottom: 50px;
   letter-spacing: -1.5px;
 }
 
 .audience-slider-wrapper {
   position: relative;
-  display: flex;
-  align-items: center;
+  width: 100%;
 }
 
 .audience-nav-btn {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  color: #3b82f6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 10;
-  transition: all 0.2s ease;
-}
-
-.audience-nav-btn:hover {
-  background: #f8fafc;
-  transform: translateY(-50%) scale(1.05);
-}
-
-.audience-nav-btn.prev {
-  left: 20px;
-}
-
-.audience-nav-btn.next {
-  right: 20px;
+  display: none !important;
 }
 
 .audience-grid {
   display: flex;
-  gap: 32px;
-  overflow-x: auto;
-  padding: 20px 150px 40px; /* Increased padding for left and right offset */
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  flex-wrap: wrap;
+  gap: 24px;
+  justify-content: center;
+  padding: 20px 0;
   width: 100%;
-  scroll-padding: 0 150px;
-}
-
-.audience-grid::-webkit-scrollbar {
-  display: none; /* Chrome/Safari */
 }
 
 .audience-card {
-  flex: 0 0 400px;
-  scroll-snap-align: start;
+  flex: 0 1 calc(33.333% - 16px);
+  min-width: 300px;
   background: #ffffff;
-  padding: 40px;
-  border-radius: 0;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
   text-align: left;
   display: flex;
   flex-direction: column;
   border: 1px solid #f1f5f9;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.audience-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 15px 35px rgba(20, 110, 245, 0.06);
+  border-color: #cbd5e1;
 }
 
 .audience-card h3 {
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 700;
   color: #1e293b;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .audience-card p {
-  font-size: 16px;
-  line-height: 1.7;
+  font-size: 15px;
+  line-height: 1.6;
   color: #475569;
   margin: 0;
 }
 
 @media (max-width: 1024px) {
-  .audience-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .audience-card {
+    flex: 0 1 calc(50% - 12px);
   }
 }
 
 @media (max-width: 768px) {
-  .audience-grid {
-    grid-template-columns: 1fr;
+  .audience-card {
+    flex: 0 1 100%;
   }
   
   .audience-title {
@@ -5570,14 +5583,16 @@ main {
   z-index: 1200;
   padding: 24px 20px 32px;
   overflow-y: auto;
-  transition: right 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: right 0.32s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.32s;
   display: flex;
   flex-direction: column;
   box-shadow: -6px 0 40px rgba(0, 0, 0, 0.12);
+  visibility: hidden; /* Prevent horizontal scroll/dragging when closed */
 }
 
 .mw-mobile-nav.open {
   right: 0;
+  visibility: visible;
 }
 
 /* Drawer header row */
@@ -5741,7 +5756,7 @@ main {
   .mw-chat-bubble { bottom: 22px; right: 16px; width: 48px; height: 48px; font-size: 18px; }
 
   /* ── Header ── */
-  .mw-header { padding: 10px 0; box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
+  .mw-header { padding: 14px 0; box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
   .mw-nav-container { min-height: 56px; align-items: center; }
   .mw-logo img { display: block; }
   .mw-header-actions { align-items: center; }
@@ -8176,4 +8191,178 @@ body:has(.mw-mobile-nav.open) .mw-chat-bubble {
     .cart-page * { max-width: 100%; }
     /* But preserve dropdown menus so they don't get clipped */
     .cart-dropdown-menu, .mw-mobile-nav, .mw-modal-panel { max-width: none; }
+}
+
+/* ── 4. Viewport-fitted Desktop Hero Section ──
+   Ensures the entire home page hero fits within one viewport on desktop
+   by adjusting outer paddings and image scale, while preserving
+   the original text sizes, margins, fonts, and styles. */
+@media (min-width: 1025px) {
+    /* Enable vertical viewport scroll stickiness by removing horizontal overflow container on desktop */
+    .comparison-table-wrapper {
+        overflow: visible !important;
+    }
+
+    /* Compact navbar on desktop viewports */
+    .mw-header {
+        padding: 12px 0 !important;
+    }
+
+    .mw-logo img {
+        height: 38px !important;
+        transform: translateY(2px) !important;
+    }
+
+    .mw-nav-ul > li {
+        padding: 5px 0 !important;
+    }
+
+    #home.mw-hero {
+        min-height: calc(100vh - 95px); /* Updated to match new 63px header + 32px topbar */
+        padding: 20px 0 !important; /* Compact outer padding to save 120px height */
+        display: flex;
+        align-items: center;
+        box-sizing: border-box;
+    }
+
+    #home.mw-hero .mw-hero-container {
+        display: flex;
+        align-items: center;
+        gap: 60px; /* Original spacious gap */
+        width: 100%;
+    }
+
+    #home.mw-hero .mw-hero-text {
+        flex: 1.1;
+    }
+
+    /* All original font-sizes, margins, paddings, and styles restored perfectly */
+    #home.mw-hero .mw-hero-eyebrow {
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        padding: 6px 14px !important;
+        margin-bottom: 16px !important;
+    }
+
+    #home.mw-hero .mw-hero-offer {
+        font-size: 14px !important;
+        font-weight: 700 !important;
+        padding: 8px 16px !important;
+        margin-bottom: 18px !important;
+    }
+
+    #home.mw-hero .mw-hero-text h1 {
+        font-size: 48px !important; /* Original premium 48px size */
+        line-height: 1.1 !important;
+        margin-bottom: 18px !important;
+    }
+
+    #home.mw-hero .hero-subheading {
+        font-size: 18px !important; /* Original 18px size */
+        line-height: 1.55 !important;
+        margin-bottom: 28px !important;
+    }
+
+    #home.mw-hero .mw-hero-bullets {
+        margin-bottom: 30px !important;
+    }
+
+    #home.mw-hero .mw-hero-bullets li {
+        font-size: 15px !important; /* Original size */
+        margin-bottom: 12px !important;
+        gap: 12px !important;
+    }
+
+    #home.mw-hero .mw-hero-bullets i {
+        width: 22px !important;
+        height: 22px !important;
+        font-size: 11px !important;
+    }
+
+    #home.mw-hero .mw-hero-price {
+        margin-bottom: 5px !important;
+    }
+
+    #home.mw-hero .price-value {
+        font-size: 56px !important; /* Original premium large price */
+    }
+
+    #home.mw-hero .price-symbol {
+        font-size: 24px !important;
+    }
+
+    #home.mw-hero .price-mo {
+        font-size: 18px !important;
+    }
+
+    #home.mw-hero .mw-hero-renewal {
+        font-size: 14px !important;
+        margin-bottom: 24px !important;
+    }
+
+    #home.mw-hero .mw-hero-tax-note {
+        font-size: 15px !important;
+        margin-top: 6px !important;
+        margin-bottom: 22px !important;
+    }
+
+    #home.mw-hero .mw-hero-actions {
+        margin-bottom: 28px !important;
+        gap: 12px !important;
+    }
+
+    #home.mw-hero .btn-mw-primary, 
+    #home.mw-hero .btn-mw-secondary {
+        font-size: 17px !important; /* Original button text size */
+        border-radius: 12px !important;
+    }
+    
+    #home.mw-hero .btn-mw-primary {
+        padding: 14px 32px !important; /* Original padding */
+    }
+    
+    #home.mw-hero .btn-mw-secondary {
+        padding: 14px 28px !important; /* Original padding */
+    }
+
+    #home.mw-hero .mw-hero-trust {
+        gap: 24px !important;
+        font-size: 13px !important;
+    }
+
+    #home.mw-hero .mw-hero-visual {
+        flex: 0.9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Scaling only the visual asset slightly so the section fits the viewport */
+    #home.mw-hero .mw-hero-visual img {
+        max-height: calc(100vh - 200px) !important;
+        max-width: 100% !important;
+        height: auto !important;
+        aspect-ratio: 16 / 10 !important;
+        object-fit: cover !important;
+    }
+}
+
+/* ── 5. Mobile Horizontal Scroll & Drag Prevention ──
+   Enforces horizontal containment on html and body on mobile and tablet viewports,
+   while keeping containers and layout paddings fully intact to avoid layout shifts. */
+@media (max-width: 1024px) {
+    html, body {
+        overflow-x: clip; /* Using clip instead of hidden prevents breaking position: sticky on mobile */
+        max-width: 100%;
+        width: 100%;
+        position: relative;
+    }
+
+    /* Clip absolute positioned glowing graphics or arrows that float outside the viewport */
+    .mw-trust-scale-section, 
+    .mw-parallax-cards-section, 
+    .mw-support-section, 
+    .mw-guarantee-section {
+        overflow: hidden !important;
+    }
 }

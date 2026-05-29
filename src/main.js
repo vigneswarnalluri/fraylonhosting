@@ -860,6 +860,8 @@
             drawer.setAttribute('aria-hidden', 'true');
             overlay.setAttribute('aria-hidden', 'true');
             document.body.style.overflow = '';
+            // Shift focus back to the hamburger button so it doesn't get trapped in a hidden drawer
+            setTimeout(() => btn.focus(), 50);
         };
         window.__fraylonCloseMobileNav = close;
 
@@ -1193,11 +1195,58 @@
         },
     };
 
+    function initNavbarActiveHighlights() {
+        let path = window.location.pathname;
+        let page = path.substring(path.lastIndexOf('/') + 1);
+        if (!page || page === '') {
+            page = 'index.html';
+        }
+
+        // Loop through all anchor elements inside the desktop navigation
+        $$('.mw-nav-ul a').forEach(link => {
+            const href = link.getAttribute('href');
+            if (!href) return;
+            
+            const linkPage = href.split('#')[0].split('?')[0];
+            if (linkPage === page) {
+                if (link.classList.contains('mega-item')) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.add('is-active');
+                }
+                
+                const parentLi = link.closest('.has-submenu');
+                if (parentLi) {
+                    parentLi.classList.add('active');
+                    const triggerLink = parentLi.querySelector('a');
+                    if (triggerLink) triggerLink.classList.add('is-active');
+                }
+            }
+        });
+        
+        // Loop through mobile nav links too
+        $$('.mw-mobile-nav-ul a').forEach(link => {
+            const href = link.getAttribute('href');
+            if (!href) return;
+            const linkPage = href.split('#')[0].split('?')[0];
+            if (linkPage === page) {
+                link.classList.add('is-active');
+                const parentLi = link.closest('.has-sub');
+                if (parentLi) {
+                    parentLi.classList.add('active');
+                    const subToggle = parentLi.querySelector('.mw-mobile-sub-toggle');
+                    if (subToggle) subToggle.classList.add('is-active');
+                }
+            }
+        });
+    }
+
     // ─────────────────────────────────────────────
     // Boot
     // ─────────────────────────────────────────────
 
     document.addEventListener('DOMContentLoaded', () => {
+        initNavbarActiveHighlights();
         initReveal();
         renderPlans();
         renderFaq();

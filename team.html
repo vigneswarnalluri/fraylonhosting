@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="./public/favicon.png">
 </head>
 <body>
     <div class="mw-top-bar">
@@ -20,23 +21,22 @@
         </div>
     </div>
 
-    <header class="mw-header">
+    <header class="mw-header" id="siteHeader">
         <div class="container mw-nav-container">
             <div class="mw-logo-wrapper">
                 <div class="mw-logo">
-                    <a href="index.html">
-                        <img src="logo.png" alt="Fraylon Logo">
+                    <a href="index.html" aria-label="Fraylon Hosting — home">
+                        <img src="logo.png" alt="Fraylon Hosting">
                     </a>
                 </div>
-
             </div>
-            <nav class="mw-nav">
+            <nav class="mw-nav" aria-label="Primary">
                 <ul class="mw-nav-ul">
                     <li class="has-submenu">
-                        <a href="#">Hosting <i class="fas fa-chevron-down"></i></a>
+                        <a href="hosting.html">Hosting <i class="fas fa-chevron-down" aria-hidden="true"></i></a>
                         <div class="mw-mega-menu">
                             <a href="web-hosting.html" class="mega-item">
-                                <div class="mega-item-icon-wrap"><i class="fas fa-server"></i></div>
+                                <div class="mega-item-icon-wrap"><i class="fas fa-server" aria-hidden="true"></i></div>
                                 <div class="mega-item-body">
                                     <div class="mega-item-header">
                                         <span class="mega-item-title">Web Hosting</span>
@@ -45,8 +45,8 @@
                                     <p class="mega-item-desc">For new and business websites</p>
                                 </div>
                             </a>
-                            <a href="#" class="mega-item">
-                                <div class="mega-item-icon-wrap"><i class="fas fa-cloud"></i></div>
+                            <a href="hosting.html#cloud" class="mega-item">
+                                <div class="mega-item-icon-wrap"><i class="fas fa-cloud" aria-hidden="true"></i></div>
                                 <div class="mega-item-body">
                                     <div class="mega-item-header">
                                         <span class="mega-item-title">Cloud Hosting</span>
@@ -55,8 +55,8 @@
                                     <p class="mega-item-desc">For growing and scalable websites</p>
                                 </div>
                             </a>
-                            <a href="#" class="mega-item">
-                                <div class="mega-item-icon-wrap"><i class="fas fa-code"></i></div>
+                            <a href="hosting.html#nodejs" class="mega-item">
+                                <div class="mega-item-icon-wrap"><i class="fas fa-code" aria-hidden="true"></i></div>
                                 <div class="mega-item-body">
                                     <div class="mega-item-header">
                                         <span class="mega-item-title">Node.js Hosting</span>
@@ -67,10 +67,10 @@
                         </div>
                     </li>
                     <li class="has-submenu">
-                        <a href="#">WordPress <i class="fas fa-chevron-down"></i></a>
+                        <a href="wordpress.html">WordPress <i class="fas fa-chevron-down" aria-hidden="true"></i></a>
                         <div class="mw-mega-menu">
-                            <a href="#" class="mega-item">
-                                <div class="mega-item-icon-wrap"><i class="fab fa-wordpress"></i></div>
+                            <a href="wordpress.html" class="mega-item">
+                                <div class="mega-item-icon-wrap"><i class="fab fa-wordpress" aria-hidden="true"></i></div>
                                 <div class="mega-item-body">
                                     <div class="mega-item-header">
                                         <span class="mega-item-title">WordPress Hosting</span>
@@ -79,8 +79,8 @@
                                     <p class="mega-item-desc">Get your website online today</p>
                                 </div>
                             </a>
-                            <a href="#" class="mega-item">
-                                <div class="mega-item-icon-wrap"><i class="fas fa-shield-halved"></i></div>
+                            <a href="wordpress.html#managed" class="mega-item">
+                                <div class="mega-item-icon-wrap"><i class="fas fa-shield-halved" aria-hidden="true"></i></div>
                                 <div class="mega-item-body">
                                     <div class="mega-item-header">
                                         <span class="mega-item-title">Managed WordPress</span>
@@ -92,10 +92,10 @@
                         </div>
                     </li>
                     <li class="has-submenu">
-                        <a href="#">VPS & Dedicated <i class="fas fa-chevron-down"></i></a>
+                        <a href="coming-soon.html">VPS &amp; Dedicated <i class="fas fa-chevron-down" aria-hidden="true"></i></a>
                         <div class="mw-mega-menu">
-                            <a href="#" class="mega-item">
-                                <div class="mega-item-icon-wrap"><i class="fas fa-server"></i></div>
+                            <a href="coming-soon.html" class="mega-item">
+                                <div class="mega-item-icon-wrap"><i class="fas fa-server" aria-hidden="true"></i></div>
                                 <div class="mega-item-body">
                                     <div class="mega-item-header">
                                         <span class="mega-item-title">VPS Hosting</span>
@@ -104,8 +104,8 @@
                                     <p class="mega-item-desc">For more power and control</p>
                                 </div>
                             </a>
-                            <a href="#" class="mega-item">
-                                <div class="mega-item-icon-wrap"><i class="fas fa-sliders"></i></div>
+                            <a href="coming-soon.html" class="mega-item">
+                                <div class="mega-item-icon-wrap"><i class="fas fa-sliders" aria-hidden="true"></i></div>
                                 <div class="mega-item-body">
                                     <div class="mega-item-header">
                                         <span class="mega-item-title">Managed VPS Hosting</span>
@@ -114,8 +114,8 @@
                                     <p class="mega-item-desc">We manage your VPS for you</p>
                                 </div>
                             </a>
-                            <a href="#" class="mega-item">
-                                <div class="mega-item-icon-wrap"><i class="fab fa-windows"></i></div>
+                            <a href="coming-soon.html" class="mega-item">
+                                <div class="mega-item-icon-wrap"><i class="fab fa-windows" aria-hidden="true"></i></div>
                                 <div class="mega-item-body">
                                     <div class="mega-item-header">
                                         <span class="mega-item-title">Windows VPS</span>
@@ -124,8 +124,8 @@
                                     <p class="mega-item-desc">Ideal for ASP.NET and Windows apps</p>
                                 </div>
                             </a>
-                            <a href="#" class="mega-item">
-                                <div class="mega-item-icon-wrap"><i class="fas fa-database"></i></div>
+                            <a href="coming-soon.html" class="mega-item">
+                                <div class="mega-item-icon-wrap"><i class="fas fa-database" aria-hidden="true"></i></div>
                                 <div class="mega-item-body">
                                     <div class="mega-item-header">
                                         <span class="mega-item-title">Dedicated Server</span>
@@ -136,10 +136,10 @@
                         </div>
                     </li>
                     <li class="has-submenu">
-                        <a href="#">Domain & Email <i class="fas fa-chevron-down"></i></a>
+                        <a href="coming-soon.html">Domain &amp; Email <i class="fas fa-chevron-down" aria-hidden="true"></i></a>
                         <div class="mw-mega-menu">
-                            <a href="#" class="mega-item">
-                                <div class="mega-item-icon-wrap"><i class="fas fa-globe"></i></div>
+                            <a href="coming-soon.html" class="mega-item">
+                                <div class="mega-item-icon-wrap"><i class="fas fa-globe" aria-hidden="true"></i></div>
                                 <div class="mega-item-body">
                                     <div class="mega-item-header">
                                         <span class="mega-item-title">Domain</span>
@@ -147,8 +147,8 @@
                                     <p class="mega-item-desc">Register your domain name</p>
                                 </div>
                             </a>
-                            <a href="#" class="mega-item">
-                                <div class="mega-item-icon-wrap"><i class="fas fa-envelope"></i></div>
+                            <a href="coming-soon.html" class="mega-item">
+                                <div class="mega-item-icon-wrap"><i class="fas fa-envelope" aria-hidden="true"></i></div>
                                 <div class="mega-item-body">
                                     <div class="mega-item-header">
                                         <span class="mega-item-title">Business Email</span>
@@ -157,8 +157,8 @@
                                     <p class="mega-item-desc">Professional email for startups</p>
                                 </div>
                             </a>
-                            <a href="#" class="mega-item">
-                                <div class="mega-item-icon-wrap"><i class="fas fa-lock"></i></div>
+                            <a href="coming-soon.html" class="mega-item">
+                                <div class="mega-item-icon-wrap"><i class="fas fa-lock" aria-hidden="true"></i></div>
                                 <div class="mega-item-body">
                                     <div class="mega-item-header">
                                         <span class="mega-item-title">SSL Certificate</span>
@@ -168,12 +168,12 @@
                             </a>
                         </div>
                     </li>
-                    <li><a href="#">Pricing</a></li>
+                    <li><a href="pricing.html">Pricing</a></li>
                     <li class="has-submenu">
-                        <a href="#">Support <i class="fas fa-chevron-down"></i></a>
+                        <a href="#contact" data-nav-section="contact" data-scroll>Support <i class="fas fa-chevron-down" aria-hidden="true"></i></a>
                         <div class="mw-mega-menu">
-                            <a href="#" class="mega-item">
-                                <div class="mega-item-icon-wrap"><i class="fas fa-book-open"></i></div>
+                            <a href="coming-soon.html" class="mega-item">
+                                <div class="mega-item-icon-wrap"><i class="fas fa-book-open" aria-hidden="true"></i></div>
                                 <div class="mega-item-body">
                                     <div class="mega-item-header">
                                         <span class="mega-item-title">Knowledge Base</span>
@@ -181,8 +181,8 @@
                                     <p class="mega-item-desc">Find instant answers and solutions</p>
                                 </div>
                             </a>
-                            <a href="#" class="mega-item">
-                                <div class="mega-item-icon-wrap"><i class="fas fa-circle-play"></i></div>
+                            <a href="coming-soon.html" class="mega-item">
+                                <div class="mega-item-icon-wrap"><i class="fas fa-circle-play" aria-hidden="true"></i></div>
                                 <div class="mega-item-body">
                                     <div class="mega-item-header">
                                         <span class="mega-item-title">Tutorials</span>
@@ -190,8 +190,8 @@
                                     <p class="mega-item-desc">Easy how-to videos</p>
                                 </div>
                             </a>
-                            <a href="#" class="mega-item">
-                                <div class="mega-item-icon-wrap"><i class="fas fa-headset"></i></div>
+                            <a href="#contact" class="mega-item" data-scroll>
+                                <div class="mega-item-icon-wrap"><i class="fas fa-headset" aria-hidden="true"></i></div>
                                 <div class="mega-item-body">
                                     <div class="mega-item-header">
                                         <span class="mega-item-title">Contact Us</span>
@@ -202,10 +202,10 @@
                         </div>
                     </li>
                     <li class="has-submenu">
-                        <a href="about-us.html" class="active-nav">About Us <i class="fas fa-chevron-down"></i></a>
+                        <a href="about-us.html">About Us <i class="fas fa-chevron-down" aria-hidden="true"></i></a>
                         <div class="mw-mega-menu">
                             <a href="about-us.html" class="mega-item">
-                                <div class="mega-item-icon-wrap"><i class="fas fa-building"></i></div>
+                                <div class="mega-item-icon-wrap"><i class="fas fa-building" aria-hidden="true"></i></div>
                                 <div class="mega-item-body">
                                     <div class="mega-item-header">
                                         <span class="mega-item-title">About Fraylon</span>
@@ -213,8 +213,8 @@
                                     <p class="mega-item-desc">Trusted Indian host since 2025</p>
                                 </div>
                             </a>
-                            <a href="#" class="mega-item">
-                                <div class="mega-item-icon-wrap"><i class="fas fa-users"></i></div>
+                            <a href="coming-soon.html" class="mega-item">
+                                <div class="mega-item-icon-wrap"><i class="fas fa-users" aria-hidden="true"></i></div>
                                 <div class="mega-item-body">
                                     <div class="mega-item-header">
                                         <span class="mega-item-title">Customer Success Stories</span>
@@ -222,8 +222,8 @@
                                     <p class="mega-item-desc">Real results from our clients</p>
                                 </div>
                             </a>
-                            <a href="#" class="mega-item">
-                                <div class="mega-item-icon-wrap"><i class="fas fa-newspaper"></i></div>
+                            <a href="coming-soon.html" class="mega-item">
+                                <div class="mega-item-icon-wrap"><i class="fas fa-newspaper" aria-hidden="true"></i></div>
                                 <div class="mega-item-body">
                                     <div class="mega-item-header">
                                         <span class="mega-item-title">Blog</span>
@@ -236,8 +236,8 @@
                 </ul>
             </nav>
             <div class="mw-header-actions">
-                <a href="mailto:support@fraylon.com?subject=Account%20Login%20Request" class="btn btn-outline-account">My Account</a>
-                <button class="mw-hamburger" id="hamburgerBtn" aria-label="Open menu">
+                <button type="button" class="btn btn-outline-account" data-open-modal="accountModal" data-fraylon-action="open-account">My Account</button>
+                <button class="mw-hamburger" id="hamburgerBtn" aria-label="Open menu" aria-controls="mobileNav" aria-expanded="false">
                     <span></span>
                     <span></span>
                     <span></span>
