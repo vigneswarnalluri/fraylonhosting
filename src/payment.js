@@ -13,16 +13,9 @@
 
 const RZP_SCRIPT_URL = 'https://checkout.razorpay.com/v1/checkout.js';
 
-// Default API base — overridable via <meta name="fraylon-api-base" content="https://api.fraylon.com">
-// Same-origin by default: in dev Vite proxies /api → http://localhost:4242 (see vite.config.js);
-// in prod the Node server serves the static site, so same-origin also works.
-// Fallback: if the page is opened directly from disk (file://), point at the dev API.
-function apiBase() {
-    const meta = document.querySelector('meta[name="fraylon-api-base"]');
-    if (meta?.content) return meta.content.replace(/\/$/, '');
-    if (location.protocol === 'file:') return 'http://localhost:4242';
-    return '';
-}
+const API_BASE = window.location.hostname === 'localhost'
+  ? ''
+  : 'https://fraylonhosting-production.up.railway.app';
 
 let _rzpReady = null;
 function ensureRazorpayLoaded() {
@@ -40,7 +33,7 @@ function ensureRazorpayLoaded() {
 }
 
 async function apiPost(path, body) {
-    const res = await fetch(apiBase() + path, {
+    const res = await fetch(`${API_BASE}${path}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -57,7 +50,7 @@ async function apiPost(path, body) {
 }
 
 async function apiGet(path) {
-    const res = await fetch(apiBase() + path);
+    const res = await fetch(`${API_BASE}${path}`);
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
         const err = new Error(data?.error?.message || `Request failed (${res.status})`);
