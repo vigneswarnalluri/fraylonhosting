@@ -38,16 +38,45 @@ app.use(compression());
 
 // ─── CORS ───
 app.use(
-    cors({
-        origin: (origin, cb) => {
-            // No origin = same-origin request or curl. Allow.
-            if (!origin) return cb(null, true);
-            if (config.corsOrigins.length === 0) return cb(null, true);
-            if (config.corsOrigins.includes(origin)) return cb(null, true);
-            logger.warn('CORS blocked origin:', origin);
-            return cb(new Error(`Origin ${origin} not allowed by CORS`));
-        },
-        credentials: true,
+    cors((req, callback) => {
+        const origin = req.header('Origin');
+        const requestHost = req.get('host');
+        let allow = false;
+
+        if (!origin) {
+            allow = true;
+        } else {
+            try {
+                const url = new URL(origin);
+                const hostname = url.hostname;
+
+                if (
+                    // Same-origin (e.g., frontend and API served on same domain)
+                    hostname === requestHost ||
+                    // Explicitly allowed in config
+                    config.corsOrigins.includes(origin) ||
+                    // Fraylon Hosting domains
+                    hostname === 'fraylonhosting.com' ||
+                    hostname.endsWith('.fraylonhosting.com') ||
+                    // Local dev
+                    hostname === 'localhost' ||
+                    hostname === '127.0.0.1' ||
+                    // Railway staging/deployment domains
+                    hostname.endsWith('.railway.app')
+                ) {
+                    allow = true;
+                } else {
+                    logger.warn('CORS blocked origin:', origin);
+                }
+            } catch (err) {
+                logger.warn('CORS failed to parse origin:', origin, err.message);
+            }
+        }
+
+        callback(null, {
+            origin: allow,
+            credentials: true,
+        });
     })
 );
 
