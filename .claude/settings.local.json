@@ -37,7 +37,9 @@
       "PowerShell(node --check src/payment.js; if \\($?\\) { \"PARSE_OK\" } ; git status --short)",
       "PowerShell(git *)",
       "PowerShell(git status *)",
-      "PowerShell($v = git ls-files VERSION; if \\([string]::IsNullOrEmpty\\($v\\)\\) { \"NO_VERSION_TRACKED\" } else { \"VERSION_TRACKED: $v\" }; \"--- branch status ---\"; git status -sb | Select-Object -First 3)"
+      "PowerShell($v = git ls-files VERSION; if \\([string]::IsNullOrEmpty\\($v\\)\\) { \"NO_VERSION_TRACKED\" } else { \"VERSION_TRACKED: $v\" }; \"--- branch status ---\"; git status -sb | Select-Object -First 3)",
+      "Bash(grep -c -E 'id=\"__TRACKED_VAR__\"|class=\"[^\"]*__TRACKED_VAR__' cart.html)",
+      "Bash(echo \"=== EXIT: $? ===\")"
     ]
   },
   "enabledMcpjsonServers": [
