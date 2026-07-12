@@ -1,84 +1,330 @@
+<!--
+  Fraylon Hosting — "Infrastructure coming online" holding page
+  Design plan
+  -----------
+  Tokens (sourced from this codebase's own live design system in src/style.css,
+  which is the actual Fraylon Hosting brand implementation — fraylontech.com
+  returned no usable CSS/typography on fetch, so guessing was avoided):
+    --brand-blue        #146EF5  primary / "online" status
+    --brand-blue-dark   #1059B8  hover / pressed
+    --brand-ink         #020205  headings, body text
+    --brand-amber       #FFB400  "provisioning" status (brand accent, used
+                                  instead of a generic green so the status
+                                  metaphor still reads as unmistakably Fraylon)
+    --brand-gray        #4B5563  secondary text
+    --brand-border      #E5E7EB
+    --brand-bg          #F9FAFB
+  Type: DM Sans (display + body, matches the rest of the site) via Google
+  Fonts with display=swap; ui-monospace stack for the status/boot-log line
+  (no extra font request needed).
+  Signature element: an inline-SVG server rack. Each unit's status LED
+  starts amber ("provisioning") and settles to blue ("online") on a slow
+  stagger, with a scan-line sweeping down the rack once. A boot-log style
+  line below (DNS · SSL · CDN · API) lights up in the same sequence.
+  prefers-reduced-motion freezes everything to the final, fully-online
+  frame — no motion, no missing state.
+  Logo: linked to the existing /logo.png (885x282) rather than embedded,
+  per explicit sign-off — keeps the page tiny and avoids a stale copy of
+  the logo drifting from the real asset. Favicon likewise links the site's
+  existing /favicon.png. Google Fonts is the only other external request.
+-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex,follow">
-    <title>Coming Soon | Fraylon Hosting</title>
-    <meta name="description" content="This Fraylon page is launching soon. Browse our hosting plans, talk to support, or get notified when it goes live.">
-    <link rel="stylesheet" href="./src/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" type="image/png" href="/favicon.png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#146EF5">
+<meta name="robots" content="noindex,follow">
+<title>Coming Soon | Fraylon Hosting</title>
+<meta name="description" content="This Fraylon Hosting page is being provisioned. Browse hosting plans, talk to support, or get notified when it goes live.">
+<link rel="canonical" href="https://fraylon.com/coming-soon.html">
+<link rel="icon" type="image/png" href="/favicon.png">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Fraylon Hosting">
+<meta property="og:title" content="Coming Soon | Fraylon Hosting">
+<meta property="og:description" content="This page is being provisioned. Browse hosting plans or talk to support in the meantime.">
+<meta property="og:image" content="https://fraylon.com/logo.png">
+<!-- og:image note: current image is the 885x282 wordmark logo, used as a placeholder.
+     Add a dedicated 1200x630 social preview image here before this page is shared widely. -->
+<meta property="og:url" content="https://fraylon.com/coming-soon.html">
+<meta property="og:locale" content="en_IN">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Coming Soon | Fraylon Hosting">
+<meta name="twitter:description" content="This page is being provisioned. Browse hosting plans or talk to support in the meantime.">
+<meta name="twitter:image" content="https://fraylon.com/logo.png">
+
+<link rel="dns-prefetch" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --brand-blue: #146EF5;
+    --brand-blue-dark: #1059B8;
+    --brand-ink: #020205;
+    --brand-amber: #FFB400;
+    --brand-gray: #4B5563;
+    --brand-border: #E5E7EB;
+    --brand-bg: #F9FAFB;
+    --radius: 4px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    color: var(--brand-ink);
+    background: linear-gradient(180deg, #f7faff 0%, #ffffff 60%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  a { color: inherit; }
+  :focus-visible {
+    outline: 3px solid var(--brand-blue);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  .container { width: 100%; max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+  header.site-header {
+    background: #fff;
+    border-bottom: 1px solid var(--brand-border);
+  }
+  .nav-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 0;
+  }
+  .logo-link { display: inline-flex; align-items: center; }
+  .logo-link img { display: block; width: 140px; height: 44.6px; }
+  .header-actions .btn { font-size: 14px; }
+
+  main.cs-main { flex: 1; display: flex; align-items: center; padding: 56px 0; }
+
+  .cs-card {
+    max-width: 640px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px solid #e8eefc;
+    border-radius: 24px;
+    padding: 56px 48px;
+    text-align: center;
+    box-shadow: 0 40px 80px -50px rgba(20, 110, 245, 0.4);
+  }
+  .cs-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--brand-blue); background: #eef4ff; padding: 6px 12px; border-radius: 999px;
+  }
+  .eyebrow-pulse {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--brand-amber);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  .cs-card h1 {
+    font-size: 40px;
+    letter-spacing: -0.02em;
+    margin: 18px 0 12px;
+    line-height: 1.1;
+  }
+  .cs-card > p.lede { color: var(--brand-gray); font-size: 17px; line-height: 1.55; margin: 0 auto 32px; max-width: 44ch; }
+
+  /* Signature element: server rack coming online */
+  .rack-wrap { margin: 0 auto 20px; max-width: 340px; }
+  .rack-svg { width: 100%; height: auto; display: block; }
+  .led {
+    fill: var(--brand-amber);
+    animation: led-online 3.6s ease-in-out infinite;
+  }
+  .led2 { animation-delay: .35s; }
+  .led3 { animation-delay: .7s; }
+  .led4 { animation-delay: 1.05s; }
+  .scan {
+    animation: scan-sweep 3.6s ease-in-out infinite;
+  }
+  .unit { fill: #141F30; stroke: #233047; }
+  .vent { fill: #2a3444; }
+  .boot-log {
+    display: flex; justify-content: center; flex-wrap: wrap; gap: 14px 18px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px; color: var(--brand-gray);
+    margin-bottom: 32px;
+  }
+  .boot-log li { list-style: none; display: inline-flex; align-items: center; gap: 6px; }
+  .boot-log .dot {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--brand-amber);
+    animation: led-online 3.6s ease-in-out infinite;
+  }
+  .boot-log li:nth-child(1) .dot { animation-delay: 0s; }
+  .boot-log li:nth-child(2) .dot { animation-delay: .35s; }
+  .boot-log li:nth-child(3) .dot { animation-delay: .7s; }
+  .boot-log li:nth-child(4) .dot { animation-delay: 1.05s; }
+
+  @keyframes led-online {
+    0% { fill: var(--brand-amber); }
+    30% { fill: var(--brand-amber); }
+    55% { fill: var(--brand-blue); }
+    100% { fill: var(--brand-blue); }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .35; }
+  }
+  @keyframes scan-sweep {
+    0% { transform: translateY(-4px); opacity: 0; }
+    15% { opacity: .9; }
+    55% { transform: translateY(84px); opacity: 0; }
+    100% { transform: translateY(84px); opacity: 0; }
+  }
+  .boot-log .dot { animation-name: dot-online; }
+  @keyframes dot-online {
+    0% { background: var(--brand-amber); }
+    30% { background: var(--brand-amber); }
+    55% { background: var(--brand-blue); }
+    100% { background: var(--brand-blue); }
+  }
+
+  .cs-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 20px; border-radius: var(--radius); font-weight: 600; font-size: 15px;
+    text-decoration: none; border: 1px solid transparent; cursor: pointer;
+    transition: all 0.2s ease-in-out;
+  }
+  .btn-primary { background: var(--brand-blue); color: #fff; }
+  .btn-primary:hover { background: var(--brand-blue-dark); }
+  .btn-secondary { border-color: var(--brand-blue); color: var(--brand-blue); background: #fff; }
+  .btn-secondary:hover { background: #eef4ff; }
+  .btn svg { width: 14px; height: 14px; }
+
+  .cs-notify {
+    border-top: 1px solid #f1f5f9; padding-top: 28px; margin: 0 auto;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+  }
+  .cs-notify p { margin: 0; font-size: 13px; color: var(--brand-gray); }
+
+  .cs-back { margin-top: 24px; }
+  .cs-back a { font-size: 14px; font-weight: 500; color: var(--brand-gray); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+  .cs-back a:hover { color: var(--brand-blue); }
+  .cs-back svg { width: 12px; height: 12px; }
+
+  footer.site-footer { padding: 24px 0; border-top: 1px solid #f1f5f9; }
+  .footer-row {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+    font-size: 13px; color: var(--brand-gray);
+  }
+  .footer-row a { color: var(--brand-blue); text-decoration: none; font-weight: 600; }
+  .footer-row a:hover { text-decoration: underline; }
+
+  @media (max-width: 600px) {
+    .cs-card { padding: 36px 24px; border-radius: 18px; }
+    .cs-card h1 { font-size: 28px; }
+    .footer-row { flex-direction: column; text-align: center; }
+  }
+  @media (max-width: 360px) {
+    .cs-card { padding: 28px 16px; }
+    .cs-card h1 { font-size: 24px; }
+    .btn { width: 100%; justify-content: center; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .eyebrow-pulse, .led, .boot-log .dot { animation: none; fill: var(--brand-blue); background: var(--brand-blue); opacity: 1; }
+    .scan { animation: none; opacity: 0; }
+  }
+</style>
 </head>
-<body class="cs-body">
-    <header class="mw-header">
-        <div class="container mw-nav-container">
-            <div class="mw-logo-wrapper">
-                <div class="mw-logo">
-                    <a href="index.html" aria-label="Fraylon Hosting — home">
-                        <img src="logo.png" alt="Fraylon">
-                    </a>
-                </div>
-            </div>
-            <div class="mw-header-actions">
-                <a href="index.html#plans-section" class="btn btn-mw-primary">View Plans</a>
-            </div>
+<body>
+  <header class="site-header">
+    <div class="container nav-row">
+      <a href="index.html" class="logo-link" aria-label="Fraylon Hosting — home">
+        <img src="logo.png" alt="Fraylon Hosting" width="140" height="45">
+      </a>
+      <div class="header-actions">
+        <a href="index.html#plans-section" class="btn btn-primary">View plans</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="cs-main">
+    <div class="container">
+      <section class="cs-card">
+        <span class="cs-eyebrow"><span class="eyebrow-pulse" aria-hidden="true"></span> Provisioning</span>
+        <h1>This page is coming online.</h1>
+        <p class="lede">We're bringing this part of Fraylon Hosting up the same way we bring up a server: piece by piece, checked at every step.</p>
+
+        <div class="rack-wrap" aria-hidden="true">
+          <svg class="rack-svg" viewBox="0 0 300 120" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="scanGrad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#146EF5" stop-opacity="0"/>
+                <stop offset="50%" stop-color="#146EF5" stop-opacity="1"/>
+                <stop offset="100%" stop-color="#146EF5" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <rect x="10" y="4" width="280" height="112" rx="6" fill="#0B1424"/>
+            <g>
+              <rect x="22" y="16" width="256" height="18" rx="3" class="unit"/>
+              <rect class="vent" x="32" y="21" width="2" height="8"/><rect class="vent" x="38" y="21" width="2" height="8"/><rect class="vent" x="44" y="21" width="2" height="8"/><rect class="vent" x="50" y="21" width="2" height="8"/><rect class="vent" x="56" y="21" width="2" height="8"/><rect class="vent" x="62" y="21" width="2" height="8"/>
+              <circle class="led" cx="258" cy="25" r="5"/>
+              <circle class="led led2" cx="244" cy="25" r="5"/>
+
+              <rect x="22" y="42" width="256" height="18" rx="3" class="unit"/>
+              <rect class="vent" x="32" y="47" width="2" height="8"/><rect class="vent" x="38" y="47" width="2" height="8"/><rect class="vent" x="44" y="47" width="2" height="8"/><rect class="vent" x="50" y="47" width="2" height="8"/><rect class="vent" x="56" y="47" width="2" height="8"/><rect class="vent" x="62" y="47" width="2" height="8"/>
+              <circle class="led led2" cx="258" cy="51" r="5"/>
+              <circle class="led led3" cx="244" cy="51" r="5"/>
+
+              <rect x="22" y="68" width="256" height="18" rx="3" class="unit"/>
+              <rect class="vent" x="32" y="73" width="2" height="8"/><rect class="vent" x="38" y="73" width="2" height="8"/><rect class="vent" x="44" y="73" width="2" height="8"/><rect class="vent" x="50" y="73" width="2" height="8"/><rect class="vent" x="56" y="73" width="2" height="8"/><rect class="vent" x="62" y="73" width="2" height="8"/>
+              <circle class="led led3" cx="258" cy="77" r="5"/>
+              <circle class="led led4" cx="244" cy="77" r="5"/>
+
+              <rect x="22" y="94" width="256" height="18" rx="3" class="unit"/>
+              <rect class="vent" x="32" y="99" width="2" height="8"/><rect class="vent" x="38" y="99" width="2" height="8"/><rect class="vent" x="44" y="99" width="2" height="8"/><rect class="vent" x="50" y="99" width="2" height="8"/><rect class="vent" x="56" y="99" width="2" height="8"/><rect class="vent" x="62" y="99" width="2" height="8"/>
+              <circle class="led led4" cx="258" cy="103" r="5"/>
+              <circle class="led" cx="244" cy="103" r="5"/>
+            </g>
+            <rect class="scan" x="16" y="14" width="268" height="4" fill="url(#scanGrad)"/>
+          </svg>
         </div>
-    </header>
+        <ul class="boot-log">
+          <li><span class="dot" aria-hidden="true"></span>DNS</li>
+          <li><span class="dot" aria-hidden="true"></span>SSL</li>
+          <li><span class="dot" aria-hidden="true"></span>CDN</li>
+          <li><span class="dot" aria-hidden="true"></span>API</li>
+        </ul>
 
-    <main class="cs-main">
-        <div class="container">
-            <section class="cs-card">
-                <span class="cs-eyebrow"><span class="eyebrow-pulse" aria-hidden="true"></span> Launching soon</span>
-                <h1>This page is being built.</h1>
-                <p>We're polishing the details so it lives up to the rest of Fraylon. In the meantime, here's where to go.</p>
-
-                <div class="cs-actions">
-                    <a href="index.html#plans-section" class="btn btn-mw-primary">Browse hosting plans <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
-                    <a href="index.html#contact" class="btn btn-mw-secondary">Talk to support</a>
-                </div>
-
-                <form class="cs-notify" id="csNotifyForm" novalidate>
-                    <label for="csNotifyEmail">Notify me when it's live</label>
-                    <div class="cs-notify-row">
-                        <input type="email" id="csNotifyEmail" name="email" placeholder="you@example.com" required autocomplete="email">
-                        <button type="submit" class="btn btn-mw-primary">Notify me</button>
-                    </div>
-                    <p class="cs-notify-msg" id="csNotifyMsg" role="status" aria-live="polite"></p>
-                </form>
-
-                <div class="cs-back">
-                    <a href="index.html"><i class="fas fa-arrow-left" aria-hidden="true"></i> Back to home</a>
-                </div>
-            </section>
+        <div class="cs-actions">
+          <a href="index.html#plans-section" class="btn btn-primary">Browse hosting plans
+            <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a href="index.html#contact" class="btn btn-secondary">Talk to support</a>
         </div>
-    </main>
 
-    <footer class="mw-footer cs-footer">
-        <div class="container">
-            <div class="footer-bottom">
-                <div class="copyright-row">
-                    <p>© 2025 - 2026 Fraylon Hosting. All rights reserved.</p>
-                </div>
-            </div>
+        <div class="cs-notify">
+          <p>Want to know the moment it's live?</p>
+          <a class="btn btn-secondary" href="mailto:contact@fraylontech.com?subject=Notify%20me%20when%20this%20Fraylon%20Hosting%20page%20launches&body=Please%20notify%20me%20when%20this%20page%20goes%20live.">
+            <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 4h12v8H2V4Zm0 0 6 5 6-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Notify me
+          </a>
         </div>
-    </footer>
 
-    <script>
-        document.getElementById('csNotifyForm').addEventListener('submit', function(e){
-            e.preventDefault();
-            var msg = document.getElementById('csNotifyMsg');
-            var email = document.getElementById('csNotifyEmail').value.trim();
-            if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
-                msg.textContent = 'Please enter a valid email address.';
-                msg.className = 'cs-notify-msg error';
-                return;
-            }
-            msg.textContent = "Thanks — we'll email " + email + " when it's live.";
-            msg.className = 'cs-notify-msg success';
-            e.target.reset();
-        });
-    </script>
+        <div class="cs-back">
+          <a href="index.html">
+            <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M13 8H3M7 4 3 8l4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Back to home
+          </a>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-row">
+      <p>© 2025 - 2026 Fraylon Hosting. All rights reserved.</p>
+      <p>Fraylon Hosting is by <a href="https://fraylontech.com" target="_blank" rel="noopener">Fraylon Technologies</a> · <a href="mailto:contact@fraylontech.com">contact@fraylontech.com</a></p>
+    </div>
+  </footer>
 </body>
 </html>
