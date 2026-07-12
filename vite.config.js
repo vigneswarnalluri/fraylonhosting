@@ -16,6 +16,7 @@ const htmlEntries = Object.fromEntries(
 
 export default defineConfig({
     server: {
+        open: '/coming-soon.html',
         proxy: {
             // Dev-only: forward /api/* to the Node payment server on :4242
             '/api': {
