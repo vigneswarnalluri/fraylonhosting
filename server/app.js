@@ -18,7 +18,9 @@ try {
     process.exit(1);
 }
 
-const __appDirname = path.dirname(fileURLToPath(import.meta.url));
+const __appDirname = (typeof import.meta !== 'undefined' && import.meta.url)
+    ? path.dirname(fileURLToPath(import.meta.url))
+    : (typeof __dirname !== 'undefined' ? __dirname : '');
 const DIST_DIR = path.resolve(__appDirname, '../dist');
 
 const app = express();
