@@ -18,8 +18,8 @@ try {
     process.exit(1);
 }
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DIST_DIR = path.resolve(__dirname, '../dist');
+const __appDirname = path.dirname(fileURLToPath(import.meta.url));
+const DIST_DIR = path.resolve(__appDirname, '../dist');
 
 const app = express();
 app.set('trust proxy', 1); // honor X-Forwarded-* behind a reverse proxy
