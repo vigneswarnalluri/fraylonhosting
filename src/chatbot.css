@@ -1,5 +1,10 @@
 /* Fraylon Chatbot Widget - Professional Corporate Stylesheet (Light Theme) */
 
+/* Hide default/static chat bubble to avoid overlap with the interactive chatbot */
+.mw-chat-bubble {
+    display: none !important;
+}
+
 .fraylon-chat-wrapper {
     position: fixed;
     bottom: 30px;
