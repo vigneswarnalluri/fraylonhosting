@@ -114,12 +114,15 @@ app.get('/.netlify/functions/api/health', (_req, res) => {
 });
 
 // ─── API routes ───
-app.use('/api/payment', paymentRoutes);
-app.use('/api/chatbot', chatbotRoutes);
+const paymentRouter = paymentRoutes.default || paymentRoutes;
+const chatbotRouter = chatbotRoutes.default || chatbotRoutes;
+
+app.use('/api/payment', paymentRouter);
+app.use('/api/chatbot', chatbotRouter);
 
 // For Netlify Functions routing compatibility
-app.use('/.netlify/functions/api/payment', paymentRoutes);
-app.use('/.netlify/functions/api/chatbot', chatbotRoutes);
+app.use('/.netlify/functions/api/payment', paymentRouter);
+app.use('/.netlify/functions/api/chatbot', chatbotRouter);
 
 // ─── Optional: serve the static site from this same server in production ───
 // Comment out the next block if you serve the frontend separately (Nginx, Netlify, etc).
