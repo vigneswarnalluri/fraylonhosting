@@ -13,17 +13,10 @@
 
 const RZP_SCRIPT_URL = 'https://checkout.razorpay.com/v1/checkout.js';
 
-// Use same-origin (empty base) for any local/dev context so we never create
-// real Razorpay orders against prod while testing from 127.0.0.1, a LAN IP,
-// or a phone on the same network. Anything else hits the Railway backend.
-const _host = window.location.hostname;
-const _isLocal =
-  _host === '' || // file:// or unknown
-  /^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\]|.*\.local)$/i.test(_host) ||
-  /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(_host); // private LAN
-const API_BASE = _isLocal
-  ? ''
-  : 'https://fraylonhosting-production.up.railway.app';
+// Use same-origin relative base path for all environments.
+// - In local development: Vite config proxies '/api/*' to the local server on port 4242.
+// - In production: Netlify redirects proxy/rewrite '/api/*' to the serverless function.
+const API_BASE = '';
 
 let _rzpReady = null;
 function ensureRazorpayLoaded() {

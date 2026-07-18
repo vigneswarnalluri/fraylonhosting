@@ -85,7 +85,7 @@ router.post('/create-order', createOrderLimiter, async (req, res) => {
             },
         });
 
-        orderRepo.create({
+        await orderRepo.create({
             id: rpOrder.id,
             receipt,
             planId: price.planId,
@@ -148,7 +148,7 @@ router.post('/verify-payment', verifyLimiter, async (req, res) => {
     }
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = parsed.data;
 
-    const order = orderRepo.findById(razorpay_order_id);
+    const order = await orderRepo.findById(razorpay_order_id);
     if (!order) {
         logger.warn('verify-payment: unknown order', { razorpay_order_id });
         return res.status(404).json(errorBody('UNKNOWN_ORDER', 'No matching order in our records.'));
@@ -156,7 +156,7 @@ router.post('/verify-payment', verifyLimiter, async (req, res) => {
 
     const ok = verifyCheckoutSignature({ razorpay_order_id, razorpay_payment_id, razorpay_signature });
     if (!ok) {
-        paymentRepo.record({
+        await paymentRepo.record({
             id: razorpay_payment_id,
             orderId: razorpay_order_id,
             signature: null,
@@ -168,12 +168,12 @@ router.post('/verify-payment', verifyLimiter, async (req, res) => {
             errorDescription: 'Signature did not validate against our key secret.',
             raw: null,
         });
-        orderRepo.setStatus(razorpay_order_id, 'failed');
+        await orderRepo.setStatus(razorpay_order_id, 'failed');
         logger.warn('Signature mismatch on verify-payment', { razorpay_order_id, razorpay_payment_id });
         return res.status(400).json(errorBody('SIGNATURE_MISMATCH', 'Payment signature did not verify.'));
     }
 
-    paymentRepo.record({
+    await paymentRepo.record({
         id: razorpay_payment_id,
         orderId: razorpay_order_id,
         signature: razorpay_signature,
@@ -183,7 +183,7 @@ router.post('/verify-payment', verifyLimiter, async (req, res) => {
         currency: order.currency,
         raw: { razorpay_order_id, razorpay_payment_id },
     });
-    orderRepo.setStatus(razorpay_order_id, 'paid');
+    await orderRepo.setStatus(razorpay_order_id, 'paid');
 
     logger.info('Payment verified', { razorpay_order_id, razorpay_payment_id, planId: order.planId });
 
@@ -211,7 +211,7 @@ router.get('/status/:orderId', statusLimiter, async (req, res) => {
         return res.status(400).json(errorBody('INVALID_ORDER_ID', 'orderId is not a Razorpay order id.'));
     }
 
-    const local = orderRepo.findById(orderId);
+    const local = await orderRepo.findById(orderId);
     if (!local) {
         return res.status(404).json(errorBody('UNKNOWN_ORDER', 'Order not found.'));
     }
@@ -225,7 +225,7 @@ router.get('/status/:orderId', statusLimiter, async (req, res) => {
         logger.warn('fetchRazorpayOrder failed', { orderId, message: err.message });
     }
 
-    const payments = paymentRepo.listForOrder(orderId);
+    const payments = await paymentRepo.listForOrder(orderId);
 
     return res.json({
         orderId: local.id,
@@ -255,7 +255,7 @@ router.get('/status/:orderId', statusLimiter, async (req, res) => {
 // Razorpay → server push for paid/failed events. Configure in Razorpay
 // Dashboard → Settings → Webhooks with the same secret as RAZORPAY_WEBHOOK_SECRET.
 // ─────────────────────────────────────────────
-router.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
     const signature = req.headers['x-razorpay-signature'];
     const rawBody = req.body instanceof Buffer ? req.body.toString('utf8') : '';
     if (!verifyWebhookSignature(rawBody, signature)) {
@@ -274,13 +274,13 @@ router.post('/webhook', express.raw({ type: 'application/json' }), (req, res) =>
     logger.info('Webhook received', { event, orderId });
 
     if (orderId) {
-        if (event === 'payment.captured') orderRepo.setStatus(orderId, 'paid');
-        else if (event === 'payment.failed') orderRepo.setStatus(orderId, 'failed');
-        else if (event === 'refund.processed') orderRepo.setStatus(orderId, 'refunded');
+        if (event === 'payment.captured') await orderRepo.setStatus(orderId, 'paid');
+        else if (event === 'payment.failed') await orderRepo.setStatus(orderId, 'failed');
+        else if (event === 'refund.processed') await orderRepo.setStatus(orderId, 'refunded');
 
         const p = payload?.payload?.payment?.entity;
         if (p) {
-            paymentRepo.record({
+            await paymentRepo.record({
                 id: p.id,
                 orderId,
                 signature: null,

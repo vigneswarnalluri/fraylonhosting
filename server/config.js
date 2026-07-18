@@ -20,6 +20,8 @@ export const config = {
         webhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET || null,
     },
 
+    databaseUrl: required('DATABASE_URL'),
+
     corsOrigins: (process.env.CORS_ORIGINS || '')
         .split(',')
         .map((s) => s.trim())
@@ -34,6 +36,7 @@ export function assertReady() {
     const missing = [];
     if (!config.razorpay.keyId) missing.push('RAZORPAY_KEY_ID');
     if (!config.razorpay.keySecret) missing.push('RAZORPAY_KEY_SECRET');
+    if (!config.databaseUrl) missing.push('DATABASE_URL');
     if (missing.length) {
         throw new Error(
             `Missing required env vars: ${missing.join(', ')}. ` +

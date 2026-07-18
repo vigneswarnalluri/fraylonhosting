@@ -1,0 +1,19 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[functions]
+  directory = "netlify/functions"
+
+# Route all /api/* requests to the Express serverless function
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true
+
+# Custom 404 page fallback for any unmatched static assets or pages
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404
