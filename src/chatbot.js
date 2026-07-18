@@ -521,6 +521,17 @@ import './chatbot.css';
             }
         });
 
+        // Close chat support window when Order Now (checkout/CTA) button is clicked
+        const msgs = $('#fraylonChatMessages');
+        if (msgs) {
+            msgs.addEventListener('click', (e) => {
+                const cta = e.target.closest('.msg-cta-btn');
+                if (cta) {
+                    if (isWindowVisible) toggleChat();
+                }
+            });
+        }
+
         // Listen for resizing to adjust the mobile toggle visibility state
         window.addEventListener('resize', () => {
             const btn = $('#fraylonChatToggle');
