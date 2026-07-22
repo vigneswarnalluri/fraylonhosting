@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 import { readdirSync } from 'fs';
+import { spawn } from 'child_process';
 
 // Multi-page app: build EVERY top-level *.html file as its own entry point.
 // Using a glob over the project root (instead of a hand-maintained list) means
@@ -14,7 +15,33 @@ const htmlEntries = Object.fromEntries(
         .map((file) => [file.replace(/\.html$/, ''), resolve(__dirname, file)])
 );
 
+function startBackendServerPlugin() {
+    let serverProcess = null;
+    return {
+        name: 'start-backend-server',
+        configureServer(server) {
+            console.log('[vite] Spawning backend API server (node server/server.js)...');
+            serverProcess = spawn('node', ['server/server.js'], {
+                stdio: 'inherit',
+                shell: true
+            });
+            
+            // Clean up process on close
+            server.httpServer?.on('close', () => {
+                if (serverProcess) {
+                    console.log('[vite] Terminating backend API server...');
+                    serverProcess.kill();
+                }
+            });
+        }
+    };
+}
+
 export default defineConfig({
+    plugins: [startBackendServerPlugin()],
+    css: {
+        postcss: {},
+    },
     server: {
         open: '/index.html',
         proxy: {

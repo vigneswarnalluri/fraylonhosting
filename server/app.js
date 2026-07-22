@@ -10,6 +10,7 @@ import { config, assertReady } from './config.js';
 import { logger } from './lib/logger.js';
 import paymentRoutes from './routes/payment.js';
 import chatbotRoutes from './routes/chatbot.js';
+import userRoutes from './routes/user.js';
 
 try {
     assertReady();
@@ -116,13 +117,16 @@ app.get('/.netlify/functions/api/health', (_req, res) => {
 // ─── API routes ───
 const paymentRouter = paymentRoutes.default || paymentRoutes;
 const chatbotRouter = chatbotRoutes.default || chatbotRoutes;
+const userRouter = userRoutes.default || userRoutes;
 
 app.use('/api/payment', paymentRouter);
 app.use('/api/chatbot', chatbotRouter);
+app.use('/api/user', userRouter);
 
 // For Netlify Functions routing compatibility
 app.use('/.netlify/functions/api/payment', paymentRouter);
 app.use('/.netlify/functions/api/chatbot', chatbotRouter);
+app.use('/.netlify/functions/api/user', userRouter);
 
 // ─── Optional: serve the static site from this same server in production ───
 // Comment out the next block if you serve the frontend separately (Nginx, Netlify, etc).

@@ -1164,7 +1164,13 @@ import './chatbot.js';
             console.log('[fraylon] onDurationChange', months);
         },
         onLogin(data) {
-            console.log('[fraylon] onLogin (stub)', { email: data.email });
+            console.log('[fraylon] onLogin', { email: data.email });
+            const name = data.email.split('@')[0];
+            const cleanName = name.charAt(0).toUpperCase() + name.slice(1);
+            localStorage.setItem('fraylon_user', JSON.stringify({ name: cleanName, email: data.email }));
+            setTimeout(() => {
+                window.location.href = 'dashboard.html';
+            }, 1000);
             return 'Welcome back! Routing you to your dashboard…';
         },
         onStartMigration(data) {
@@ -1223,6 +1229,655 @@ import './chatbot.js';
         });
     }
 
+    function initCustomPageHandlers() {
+        // Domain search handler
+        const domainBtn = $('#domainSearchBtn');
+        const domainInput = $('#domainSearchInput');
+        const domainResult = $('#domainSearchResult');
+        if (domainBtn && domainInput && domainResult) {
+            domainBtn.addEventListener('click', () => {
+                const val = domainInput.value.trim();
+                if (!val) {
+                    domainResult.textContent = 'Please enter a domain name to search.';
+                    domainResult.style.color = '#ef4444';
+                    return;
+                }
+                const clean = val.toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+                domainResult.style.color = '#38bdf8';
+                domainResult.textContent = `Searching availability for ${clean}...`;
+                setTimeout(() => {
+                    domainResult.style.color = '#4ade80';
+                    domainResult.innerHTML = `<i class="fas fa-check-circle"></i> <strong>${clean}</strong> is available for instant registration at ₹399/yr! <a href="cart.html?domain=${encodeURIComponent(clean)}" class="btn btn-mw-primary btn-sm ml-3">Register Now</a>`;
+                }, 800);
+            });
+        }
+
+        // Signup form handler
+        const signupForm = $('#signupPageForm');
+        if (signupForm) {
+            signupForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const nameInput = $('#suName');
+                const emailInput = $('#suEmail');
+                const name = nameInput ? nameInput.value.trim() : 'Customer';
+                const email = emailInput ? emailInput.value.trim() : 'user@company.com';
+                
+                const btn = signupForm.querySelector('button[type="submit"]');
+                if (btn) btn.textContent = 'Creating Account...';
+                setTimeout(() => {
+                    localStorage.setItem('fraylon_user', JSON.stringify({ name, email }));
+                    showToast('Account created successfully! Welcome to Fraylon.');
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1000);
+                }, 1000);
+            });
+        }
+
+        // Forgot password form handler
+        const fpForm = $('#forgotPassForm');
+        const fpStatus = $('#fpStatus');
+        if (fpForm && fpStatus) {
+            fpForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                fpStatus.textContent = 'Sending password reset email...';
+                setTimeout(() => {
+                    fpStatus.textContent = 'Reset link has been sent to your email address. Please check your inbox.';
+                }, 1000);
+            });
+        }
+
+        // Tutorials coming soon notification handler
+        const notifyBtn = $('#tutorialNotifyBtn');
+        const notifyInput = $('#tutorialNotifyInput');
+        const notifyStatus = $('#tutorialNotifyStatus');
+        if (notifyBtn && notifyInput && notifyStatus) {
+            notifyBtn.addEventListener('click', () => {
+                const val = notifyInput.value.trim();
+                if (!val || !val.includes('@')) {
+                    notifyStatus.style.color = '#ef4444';
+                    notifyStatus.textContent = 'Please enter a valid email address.';
+                    return;
+                }
+                notifyStatus.style.color = '#4ade80';
+                notifyStatus.textContent = 'Saving email...';
+                setTimeout(() => {
+                    notifyStatus.textContent = 'Thank you! We will notify you once our video tutorials are live.';
+                    notifyInput.value = '';
+                }, 800);
+            });
+        }
+    }
+
+    function checkAuthSession() {
+        const userStr = localStorage.getItem('fraylon_user');
+        const path = window.location.pathname;
+        const page = path.substring(path.lastIndexOf('/') + 1);
+        
+        // Trigger login modal if query parameter ?login=1 is present
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('login') === '1') {
+            setTimeout(() => openModal('accountModal'), 400);
+        }
+        
+        if (userStr) {
+            let userObj = null;
+            try {
+                userObj = JSON.parse(userStr);
+            } catch (e) {
+                console.error('[auth] Failed to parse user session:', e);
+            }
+            
+            if (userObj && userObj.email) {
+                // Change "My Account" buttons to Dashboard
+                const accountBtns = $$('[data-fraylon-action="open-account"], [data-open-modal="accountModal"], .btn-outline-account, .mw-mobile-cta');
+                accountBtns.forEach(btn => {
+                    if (btn.textContent.trim().toLowerCase() === 'my account') {
+                        btn.textContent = 'Dashboard';
+                    }
+                    btn.removeAttribute('data-open-modal');
+                    btn.removeAttribute('data-fraylon-action');
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        window.location.href = 'dashboard.html';
+                    });
+                });
+                
+                // Populate Dashboard portal header details if on dashboard page
+                if (page === 'dashboard.html') {
+                    const hAvatar = $('#dbHeaderAvatar');
+                    const hName = $('#dbHeaderName');
+                    const hSignOut = $('#dbHeaderSignOutBtn');
+                    
+                    if (hAvatar && userObj.name) hAvatar.textContent = userObj.name.charAt(0).toUpperCase();
+                    if (hName) hName.textContent = userObj.name;
+                    if (hSignOut) {
+                        hSignOut.addEventListener('click', () => {
+                            localStorage.removeItem('fraylon_user');
+                            showToast('Signed out successfully.', 'info');
+                            setTimeout(() => {
+                                window.location.href = 'index.html';
+                            }, 1000);
+                        });
+                    }
+                }
+                
+                if (page === 'signup.html' || page === 'forgot-password.html') {
+                    window.location.href = 'dashboard.html';
+                }
+                
+                if (page === 'dashboard.html') {
+                    populateDashboard(userObj);
+                }
+            }
+        } else {
+            if (page === 'dashboard.html') {
+                window.location.href = 'index.html?login=1';
+            }
+        }
+    }
+
+    function populateDashboard(user) {
+        const nameEl = $('#dbUserName');
+        const emailEl = $('#dbUserEmail');
+        const welcomeEl = $('#dbWelcomeName');
+        const avatarEl = $('#dbAvatar');
+        
+        if (nameEl) nameEl.textContent = user.name;
+        if (emailEl) emailEl.textContent = user.email;
+        if (welcomeEl) welcomeEl.textContent = user.name;
+        if (avatarEl && user.name) avatarEl.textContent = user.name.charAt(0).toUpperCase();
+        
+        const tabs = $$('.db-tab-btn');
+        const contents = $$('.db-tab-content');
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const target = tab.dataset.tab;
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                contents.forEach(c => {
+                    c.style.display = c.id === `tab-${target}` ? 'block' : 'none';
+                });
+                if (target === 'billing') {
+                    fetchBillingInvoices(user.email);
+                }
+            });
+        });
+        
+        const signOutBtn = $('#dbSignOutBtn');
+        if (signOutBtn) {
+            signOutBtn.addEventListener('click', () => {
+                localStorage.removeItem('fraylon_user');
+                showToast('Signed out successfully.', 'info');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+            });
+        }
+
+        // Fetch real purchases from database to show real details OR empty states
+        fetchDashboardServices(user);
+        
+        const ticketForm = $('#dbTicketForm');
+        const ticketStatus = $('#dbTicketStatus');
+        if (ticketForm && ticketStatus) {
+            ticketForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const subj = $('#tSubject');
+                const msg = $('#tMessage');
+                if (!subj.value.trim() || !msg.value.trim()) {
+                    ticketStatus.style.color = '#ef4444';
+                    ticketStatus.textContent = 'Please fill out all fields.';
+                    return;
+                }
+                ticketStatus.style.color = '#10b981';
+                ticketStatus.textContent = 'Submitting support ticket...';
+                setTimeout(() => {
+                    ticketStatus.textContent = 'Support ticket submitted successfully! A systems engineer will respond shortly.';
+                    subj.value = '';
+                    msg.value = '';
+                }, 1000);
+            });
+        }
+    }
+
+    function wireDomainSearchElements() {
+        const searchBtn = $('#dbDomainSearchBtn');
+        const searchInput = $('#dbDomainSearchInput');
+        const searchResult = $('#dbDomainSearchResult');
+        if (searchBtn && searchInput && searchResult) {
+            const newBtn = searchBtn.cloneNode(true);
+            searchBtn.parentNode.replaceChild(newBtn, searchBtn);
+            
+            newBtn.addEventListener('click', () => {
+                const val = searchInput.value.trim();
+                if (!val) {
+                    searchResult.textContent = 'Please enter a domain name.';
+                    searchResult.style.color = '#ef4444';
+                    return;
+                }
+                const clean = val.toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+                searchResult.style.color = '#146ef5';
+                searchResult.textContent = `Checking availability for ${clean}...`;
+                setTimeout(() => {
+                    searchResult.style.color = '#10b981';
+                    searchResult.innerHTML = `<i class="fas fa-check-circle"></i> <strong>${clean}</strong> is available! <a href="cart.html?domain=${encodeURIComponent(clean)}" class="btn btn-mw-primary btn-sm ml-3">Register</a>`;
+                }, 800);
+            });
+        }
+    }
+
+    function wireCpanelSsoHandlers() {
+        const btns = $$('.btn-cpanel-sso');
+        btns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                showCpanelSsoOverlay();
+            });
+        });
+    }
+
+    function showCpanelSsoOverlay() {
+        const overlay = document.createElement('div');
+        overlay.id = 'cpanelSsoOverlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #0f172a;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        `;
+        
+        overlay.innerHTML = `
+            <div style="text-align: center;">
+                <div style="width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.1); border-top-color: #ff6c2c; border-radius: 50%; animation: spinSso 1s linear infinite; margin: 0 auto 24px;"></div>
+                <h3 style="color: white; margin: 0 0 8px; font-size: 20px; font-weight:700;">cPanel Single Sign-On</h3>
+                <p id="ssoStatusText" style="color: #94a3b8; font-size: 14px; margin: 0;">Securing session handshake...</p>
+            </div>
+            <style>
+                @keyframes spinSso {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            </style>
+        `;
+        document.body.appendChild(overlay);
+        
+        const statusText = document.getElementById('ssoStatusText');
+        const steps = [
+            'Fetching secure SSO tokens from Node.js core...',
+            'Validating database authorization keys...',
+            'Establishing remote SSH connection handshake...',
+            'Redirecting to cPanel Control Panel...'
+        ];
+        
+        let currentStep = 0;
+        const interval = setInterval(() => {
+            if (currentStep < steps.length) {
+                statusText.textContent = steps[currentStep];
+                currentStep++;
+            } else {
+                clearInterval(interval);
+                showMockCpanelScreen();
+            }
+        }, 600);
+    }
+
+    function showMockCpanelScreen() {
+        const overlay = document.getElementById('cpanelSsoOverlay');
+        if (!overlay) return;
+        
+        overlay.style.background = '#f3f4f6';
+        overlay.style.color = '#1f2937';
+        overlay.style.display = 'block';
+        overlay.style.overflowY = 'auto';
+        overlay.style.padding = '40px 20px';
+        
+        const userStr = localStorage.getItem('fraylon_user');
+        const user = userStr ? JSON.parse(userStr) : { name: 'Customer', email: 'user@company.com' };
+        
+        overlay.innerHTML = `
+            <div style="max-width: 1100px; margin: 0 auto;">
+                <header style="background: #ffffff; border-radius: 12px; padding: 20px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 30px;">
+                    <div style="display:flex; align-items:center; gap:16px;">
+                        <img src="logo.png" alt="Fraylon cPanel" style="height: 28px;">
+                        <span style="font-weight: 700; color: #ff6c2c; font-size: 18px; border-left: 2px solid #e5e7eb; padding-left: 16px;">cPanel control panel</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:16px;">
+                        <span style="font-size: 14px; color:#4b5563;">Logged in as: <strong style="color:#111827;">${user.name.toLowerCase()}</strong></span>
+                        <button type="button" id="closeCpanelBtn" style="background:#ff6c2c; color:white; border:none; padding:8px 16px; border-radius:6px; font-weight:700; font-size:13px; cursor:pointer; margin:0;">Return to Dashboard</button>
+                    </div>
+                </header>
+                
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px; text-align: left; align-items: start;">
+                    <div>
+                        <div style="background: #ffffff; border-radius: 12px; border: 1px solid #e5e7eb; margin-bottom: 24px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                            <div style="background: #f9fafb; padding: 12px 20px; border-bottom: 1px solid #e5e7eb; font-weight: 700; color: #374151; font-size: 14px;">FILES</div>
+                            <div style="padding: 24px; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 20px;">
+                                <div style="text-align: center; cursor: pointer;" onclick="alert('File Manager: Connecting to remote storage cluster...')">
+                                    <i class="fas fa-folder-open" style="font-size: 32px; color: #ff6c2c;"></i>
+                                    <div style="font-size: 12px; margin-top: 8px; font-weight: 600;">File Manager</div>
+                                </div>
+                                <div style="text-align: center; cursor: pointer;" onclick="alert('Images directory configuration is ready.')">
+                                    <i class="fas fa-images" style="font-size: 32px; color: #ff6c2c;"></i>
+                                    <div style="font-size: 12px; margin-top: 8px; font-weight: 600;">Images</div>
+                                </div>
+                                <div style="text-align: center; cursor: pointer;" onclick="alert('Disk usage parameters are normal (1.2 GB used).')">
+                                    <i class="fas fa-hard-drive" style="font-size: 32px; color: #ff6c2c;"></i>
+                                    <div style="font-size: 12px; margin-top: 8px; font-weight: 600;">Disk Usage</div>
+                                </div>
+                                <div style="text-align: center; cursor: pointer;" onclick="alert('FTP accounts connection details: host: SFTP, port: 22')">
+                                    <i class="fas fa-network-wired" style="font-size: 32px; color: #ff6c2c;"></i>
+                                    <div style="font-size: 12px; margin-top: 8px; font-weight: 600;">FTP Accounts</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="background: #ffffff; border-radius: 12px; border: 1px solid #e5e7eb; margin-bottom: 24px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                            <div style="background: #f9fafb; padding: 12px 20px; border-bottom: 1px solid #e5e7eb; font-weight: 700; color: #374151; font-size: 14px;">DATABASES</div>
+                            <div style="padding: 24px; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 20px;">
+                                <div style="text-align: center; cursor: pointer;" onclick="alert('Launching phpMyAdmin...')">
+                                    <i class="fas fa-database" style="font-size: 32px; color: #ff6c2c;"></i>
+                                    <div style="font-size: 12px; margin-top: 8px; font-weight: 600;">phpMyAdmin</div>
+                                </div>
+                                <div style="text-align: center; cursor: pointer;" onclick="alert('MySQL Database Wizard started.')">
+                                    <i class="fas fa-wand-magic-sparkles" style="font-size: 32px; color: #ff6c2c;"></i>
+                                    <div style="font-size: 12px; margin-top: 8px; font-weight: 600;">MySQL Wizard</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="background: #ffffff; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                            <div style="background: #f9fafb; padding: 12px 20px; border-bottom: 1px solid #e5e7eb; font-weight: 700; color: #374151; font-size: 14px;">EMAIL</div>
+                            <div style="padding: 24px; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 20px;">
+                                <div style="text-align: center; cursor: pointer;" onclick="alert('Email Accounts: creating new accounts is fully active.')">
+                                    <i class="fas fa-envelope-open-text" style="font-size: 32px; color: #ff6c2c;"></i>
+                                    <div style="font-size: 12px; margin-top: 8px; font-weight: 600;">Email Accounts</div>
+                                </div>
+                                <div style="text-align: center; cursor: pointer;" onclick="alert('Forwarders: configure automatic mail forwarding.')">
+                                    <i class="fas fa-share" style="font-size: 32px; color: #ff6c2c;"></i>
+                                    <div style="font-size: 12px; margin-top: 8px; font-weight: 600;">Forwarders</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #ffffff; border-radius: 12px; border: 1px solid #e5e7eb; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                        <h4 style="margin: 0 0 16px; color:#111827; font-size: 15px; font-weight: 700; border-bottom: 2px solid #ff6c2c; padding-bottom: 8px;">GENERAL INFORMATION</h4>
+                        <div style="display:flex; flex-direction:column; gap:12px; font-size: 13px;">
+                            <div style="display:flex; justify-content:space-between; border-bottom: 1px solid #f3f4f6; padding-bottom: 8px;">
+                                <span style="color:#6b7280;">Server IP</span>
+                                <strong style="font-family:monospace;">103.14.120.88</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; border-bottom: 1px solid #f3f4f6; padding-bottom: 8px;">
+                                <span style="color:#6b7280;">Operating System</span>
+                                <strong>CloudLinux 8.9</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; border-bottom: 1px solid #f3f4f6; padding-bottom: 8px;">
+                                <span style="color:#6b7280;">cPanel Version</span>
+                                <strong>118.0.11</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; border-bottom: 1px solid #f3f4f6; padding-bottom: 8px;">
+                                <span style="color:#6b7280;">PHP Version</span>
+                                <strong>8.2.14</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; padding-bottom: 8px;">
+                                <span style="color:#6b7280;">MySQL Version</span>
+                                <strong>8.0.35</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('closeCpanelBtn').addEventListener('click', () => {
+            overlay.remove();
+        });
+    }
+
+    async function fetchDashboardServices(user) {
+        const overviewStateEl = $('#dbOverviewState');
+        const hostingContainer = $('#dbHostingContainer');
+        const domainsContainer = $('#dbDomainsContainer');
+        
+        const cntHostingEl = $('#cntHosting');
+        const cntDomainsEl = $('#cntDomains');
+        const cntOrdersEl = $('#cntOrders');
+        
+        try {
+            const res = await fetch(`/api/user/orders?email=${encodeURIComponent(user.email)}`);
+            if (!res.ok) throw new Error('API query failure');
+            const data = await res.json();
+            
+            const paidOrders = (data.orders || []).filter(o => o.status === 'paid');
+            if (cntOrdersEl) cntOrdersEl.textContent = data.orders.length;
+            
+            const planMetadata = {
+                starter: { name: 'Starter Web Hosting Plan', price: '₹69' },
+                premium: { name: 'WordPress Premium Hosting Plan', price: '₹99' },
+                max: { name: 'Business Max Hosting Plan', price: '₹189' },
+                'cloud-pro': { name: 'Cloud Pro Node.js Hosting', price: '₹449' }
+            };
+            
+            const hostingOrders = paidOrders.filter(o => ['starter', 'premium', 'max', 'cloud-pro'].includes(o.planId));
+            if (cntHostingEl) cntHostingEl.textContent = hostingOrders.length;
+            
+            const domainCount = hostingOrders.length;
+            if (cntDomainsEl) cntDomainsEl.textContent = domainCount;
+            
+            if (paidOrders.length === 0) {
+                if (overviewStateEl) {
+                    overviewStateEl.innerHTML = `
+                        <div style="background:#ffffff; border:1px dashed #cbd5e1; border-radius:12px; padding:48px 32px; text-align:center;">
+                            <div style="width:72px; height:72px; border-radius:50%; background:rgba(20,110,245,0.06); color:#146ef5; display:flex; align-items:center; justify-content:center; font-size:32px; margin:0 auto 20px;"><i class="fas fa-cubes-stacked"></i></div>
+                            <h3 style="color:#0f172a; font-size:20px; margin:0 0 8px;">No Active Services Yet</h3>
+                            <p style="color:#64748b; font-size:15px; max-width:500px; margin:0 auto 24px; line-height:1.6;">You don't have any active hosting plans or registered domain names. Make your first purchase to get your site online in minutes!</p>
+                            <div style="display:flex; justify-content:center; gap:16px; flex-wrap:wrap;">
+                                <a href="pricing.html" class="btn btn-mw-primary btn-sm"><i class="fas fa-shopping-cart" style="margin-right:6px;"></i> Start Web Hosting</a>
+                                <a href="domain.html" class="btn btn-mw-secondary btn-sm"><i class="fas fa-search" style="margin-right:6px;"></i> Search Domains</a>
+                                <button type="button" class="btn btn-outline-account btn-sm" style="color:#475569; border-color:#cbd5e1; margin:0;" id="dbEmptyConsultBtn"><i class="fas fa-comments" style="margin-right:6px;"></i> Consult Requirements</button>
+                            </div>
+                        </div>
+                    `;
+                    setTimeout(() => {
+                        const consultBtn = $('#dbEmptyConsultBtn');
+                        if (consultBtn) {
+                            consultBtn.addEventListener('click', () => {
+                                const chatToggle = $('.chatbot-toggle-btn') || $('#chat-window');
+                                if (chatToggle) {
+                                    chatToggle.click();
+                                } else {
+                                    openModal('contactModal');
+                                }
+                            });
+                        }
+                    }, 50);
+                }
+                
+                if (hostingContainer) {
+                    hostingContainer.innerHTML = `
+                        <div style="border:1px dashed #cbd5e1; border-radius:12px; padding:40px; text-align:center; background:#f8fafc;">
+                            <h4 style="color:#0f172a; margin:0 0 8px; font-size:16px;">No Active Hosting Plan</h4>
+                            <p style="color:#64748b; font-size:14px; margin-bottom:20px;">Deploy high-speed LiteSpeed SSD WordPress or Node.js hosting today.</p>
+                            <a href="pricing.html" class="btn btn-mw-primary btn-sm">Explore Hosting Plans</a>
+                        </div>
+                    `;
+                }
+                
+                if (domainsContainer) {
+                    domainsContainer.innerHTML = `
+                        <div style="border:1px dashed #cbd5e1; border-radius:12px; padding:40px; text-align:center; background:#f8fafc;">
+                            <h4 style="color:#0f172a; margin:0 0 8px; font-size:16px;">No Domain Registrations</h4>
+                            <p style="color:#64748b; font-size:14px; margin-bottom:20px;">Search and register .in, .com, or .org names starting from ₹299/yr.</p>
+                            <div class="domain-search-box" style="max-width:500px; margin: 0 auto 20px; display:flex; gap:8px;">
+                                <input type="text" placeholder="Search your dream domain..." class="domain-input" id="dbDomainSearchInput" style="flex:1;">
+                                <button type="button" class="btn btn-mw-primary btn-sm" id="dbDomainSearchBtn"><i class="fas fa-search"></i> Search</button>
+                            </div>
+                            <p id="dbDomainSearchResult" style="min-height:20px; font-weight:600; color:#146ef5; font-size:14px;"></p>
+                        </div>
+                    `;
+                    setTimeout(() => wireDomainSearchElements(), 50);
+                }
+                
+            } else {
+                if (overviewStateEl) {
+                    overviewStateEl.innerHTML = `
+                        <h3 style="color:#0f172a; margin-bottom: 16px;">Quick Operations</h3>
+                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                            <div style="border: 1px solid #e2e8f0; padding: 24px; border-radius: 12px; display: flex; flex-direction: column; justify-content: space-between; background:#ffffff;">
+                                <div>
+                                    <h4 style="margin: 0; color:#0f172a;"><i class="fab fa-wordpress text-blue" style="margin-right:8px;"></i> Manage WordPress Site</h4>
+                                    <p style="color:#64748b; font-size:14px; margin-top:8px; line-height:1.5;">Check speed parameters, clear cache, configure updates, and access database tables directly.</p>
+                                </div>
+                                <button type="button" class="btn btn-mw-primary btn-sm" style="margin-top:16px; align-self:flex-start;" onclick="document.querySelector('[data-tab=hosting]').click();">Open Manager</button>
+                            </div>
+                            <div style="border: 1px solid #e2e8f0; padding: 24px; border-radius: 12px; display: flex; flex-direction: column; justify-content: space-between; background:#ffffff;">
+                                <div>
+                                    <h4 style="margin: 0; color:#0f172a;"><i class="fas fa-truck-ramp-box text-blue" style="margin-right:8px;"></i> Request Free Site Migration</h4>
+                                    <p style="color:#64748b; font-size:14px; margin-top:8px; line-height:1.5;">Moving your website from GoDaddy, Hostinger, or Bluehost? Our migration agents handle everything in 60 minutes.</p>
+                                </div>
+                                <button type="button" class="btn btn-mw-secondary btn-sm" style="margin-top:16px; align-self:flex-start;" data-open-modal="migrationModal">Start Migration</button>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                if (hostingContainer) {
+                    hostingContainer.innerHTML = hostingOrders.map(order => {
+                        const meta = planMetadata[order.planId] || { name: 'Hosting Plan', price: '₹99' };
+                        const customerDomain = user.email.includes('@') ? user.email.split('@')[0] + '.com' : 'fraylonhosting.com';
+                        
+                        return `
+                            <div style="border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; background:#ffffff; margin-bottom:24px;">
+                                <div style="background:#f8fafc; padding:20px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+                                    <div>
+                                        <span style="font-size:11px; font-weight:800; background:#4ade80; color:#064e3b; padding:4px 8px; border-radius:4px; text-transform:uppercase;">Active</span>
+                                        <h4 style="margin:6px 0 0; color:#0f172a; font-size:18px;">${meta.name}</h4>
+                                        <p style="margin:2px 0 0; color:#64748b; font-size:13px;">Domain: <strong>${customerDomain}</strong></p>
+                                    </div>
+                                    <div style="text-align:right;">
+                                        <span style="font-size:12px; color:#64748b;">Locked Renewal Price</span>
+                                        <h4 style="margin:2px 0 0; color:#0f172a; font-size:18px;">${meta.price}<span style="font-size:13px; font-weight:normal;">/mo</span></h4>
+                                    </div>
+                                </div>
+                                <div style="padding:24px; display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px;">
+                                    <div>
+                                        <span style="font-size:12px; color:#64748b;">Datacenter Location</span>
+                                        <p style="margin:4px 0 0; color:#0f172a; font-weight:700;"><i class="fas fa-location-dot" style="color:#ef4444; margin-right:6px;"></i> Mumbai, India</p>
+                                    </div>
+                                    <div>
+                                        <span style="font-size:12px; color:#64748b;">Dedicated Server IP</span>
+                                        <p style="margin:4px 0 0; color:#0f172a; font-weight:700; font-family:monospace;">103.14.120.88</p>
+                                    </div>
+                                    <div>
+                                        <span style="font-size:12px; color:#64748b;">SSL Certificate</span>
+                                        <p style="margin:4px 0 0; color:#10b981; font-weight:700;"><i class="fas fa-lock" style="margin-right:6px;"></i> Active (AutoSSL)</p>
+                                    </div>
+                                    <div>
+                                        <span style="font-size:12px; color:#64748b;">Disk Space NVMe</span>
+                                        <p style="margin:4px 0 0; color:#0f172a; font-weight:700;">1.2 GB / 50 GB</p>
+                                    </div>
+                                </div>
+                                <div style="background:#f8fafc; padding:16px 24px; border-top:1px solid #e2e8f0; display:flex; gap:12px;">
+                                    <button type="button" class="btn btn-mw-primary btn-sm btn-cpanel-sso" style="display:inline-flex; align-items:center; gap:8px; margin:0;"><i class="fas fa-sign-in-alt"></i> Log in to cPanel</button>
+                                    <button type="button" class="btn btn-outline-account btn-sm" onclick="alert('Starting backup generation... Check back in 5 minutes.')" style="margin:0;"><i class="fas fa-rotate-left"></i> Run Backup</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                    setTimeout(() => wireCpanelSsoHandlers(), 50);
+                }
+                
+                if (domainsContainer) {
+                    domainsContainer.innerHTML = hostingOrders.map(order => {
+                        const customerDomain = user.email.includes('@') ? user.email.split('@')[0] + '.com' : 'fraylonhosting.com';
+                        return `
+                            <div style="border:1px solid #e2e8f0; border-radius:12px; padding:20px; display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; background:#ffffff;">
+                                <div>
+                                    <h4 style="margin:0; color:#0f172a; font-size:16px;">${customerDomain}</h4>
+                                    <p style="color:#64748b; font-size:12px; margin-top:4px;">Nameservers: <strong style="font-family:monospace;">ns1.fraylondns.com</strong>, <strong style="font-family:monospace;">ns2.fraylondns.com</strong></p>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:20px;">
+                                    <div style="text-align:right;">
+                                        <span style="font-size:11px; font-weight:800; background:#dbeafe; color:#1e40af; padding:4px 8px; border-radius:4px;">Auto Renew: ON</span>
+                                        <p style="color:#64748b; font-size:12px; margin-top:4px;">Expires: Dec 15, 2026</p>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-account btn-sm" onclick="alert('DNS settings are locked. Contact support to unlock.')" style="margin:0;">Manage DNS</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('') + `
+                        <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; padding:32px; text-align:center; margin-top:32px;">
+                            <h4 style="color:#0f172a; margin-bottom:8px;">Need a new domain?</h4>
+                            <p style="color:#64748b; font-size:14px; margin-bottom:20px;">Search and register instantly. Pricing starts from ₹299/yr.</p>
+                            <div class="domain-search-box" style="max-width:550px; margin: 0 auto; display:flex; gap:8px;">
+                                <input type="text" placeholder="Type your domain name (e.g. mycompany.in)..." class="domain-input" id="dbDomainSearchInput" style="flex:1;">
+                                <button type="button" class="btn btn-mw-primary" id="dbDomainSearchBtn"><i class="fas fa-search"></i> Search</button>
+                            </div>
+                            <p id="dbDomainSearchResult" style="min-height:20px; margin-top:12px; font-weight:600; color:#146ef5;"></p>
+                        </div>
+                    `;
+                    setTimeout(() => wireDomainSearchElements(), 50);
+                }
+            }
+        } catch (e) {
+            console.error('[dashboard] DB fetch failed', e);
+        }
+    }
+
+    async function fetchBillingInvoices(email) {
+        const tbody = $('#dbBillingTbody');
+        const countOrdersEl = $('#cntOrders');
+        if (!tbody) return;
+        
+        tbody.innerHTML = `<tr><td colspan="5" style="padding:32px 0; text-align:center; color:#64748b;"><i class="fas fa-spinner fa-spin" style="margin-right:8px;"></i> Querying database...</td></tr>`;
+        
+        try {
+            const res = await fetch(`/api/user/orders?email=${encodeURIComponent(email)}`);
+            if (!res.ok) throw new Error('API query failure');
+            const data = await res.json();
+            
+            if (countOrdersEl) countOrdersEl.textContent = data.orders.length;
+            
+            if (!data.orders || data.orders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="padding:32px 0; text-align:center; color:#64748b;">No completed orders found for this email. Check out a hosting plan to see transaction invoices listed here.</td></tr>`;
+                return;
+            }
+            
+            tbody.innerHTML = data.orders.map(order => {
+                const dateStr = order.createdAt ? order.createdAt.split(' ')[0] : 'N/A';
+                const formattedPrice = fmtINR(order.amountPaise / 100);
+                const statusColor = order.status === 'paid' ? '#10b981' : '#f59e0b';
+                
+                return `
+                    <tr style="border-bottom:1px solid #e2e8f0;">
+                        <td style="padding:12px 8px; font-family:monospace; color:#0f172a;">${order.id} / ${order.receipt}</td>
+                        <td style="padding:12px 8px; font-weight:600; color:#0f172a;">${order.planId.toUpperCase()} (${order.durationMonths}mo)</td>
+                        <td style="padding:12px 8px; color:#64748b;">${dateStr}</td>
+                        <td style="padding:12px 8px; font-weight:700; color:#0f172a;">${formattedPrice}</td>
+                        <td style="padding:12px 8px;"><span style="background:${statusColor}15; color:${statusColor}; font-size:11px; font-weight:800; padding:4px 8px; border-radius:4px; text-transform:uppercase;">${order.status}</span></td>
+                    </tr>
+                `;
+            }).join('');
+            
+        } catch (e) {
+            console.error('[dashboard] Billing fetch error:', e);
+            tbody.innerHTML = `<tr><td colspan="5" style="padding:32px 0; text-align:center; color:#ef4444;">Failed to fetch invoice history from database. Please reload to try again.</td></tr>`;
+        }
+    }
+
     // ─────────────────────────────────────────────
     // Boot
     // ─────────────────────────────────────────────
@@ -1242,5 +1897,7 @@ import './chatbot.js';
         initForms();
         initMobileStackCardsCarousel();
         initTestimonialSlider();
+        initCustomPageHandlers();
+        checkAuthSession();
     });
 })();

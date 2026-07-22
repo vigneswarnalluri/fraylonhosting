@@ -156,6 +156,12 @@ export const orderRepo = {
         return res.rows.length ? hydrateOrder(res.rows[0]) : null;
     },
 
+    async findByEmail(email) {
+        await ensureReady();
+        const res = await pool.query('SELECT * FROM orders WHERE customer_email = $1 ORDER BY created_at DESC', [email]);
+        return res.rows.map(hydrateOrder);
+    },
+
     async setStatus(id, status) {
         await ensureReady();
         await pool.query(
