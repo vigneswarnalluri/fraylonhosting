@@ -44,6 +44,7 @@ import './chatbot.css';
 
         injectChatMarkup();
         bindEvents();
+        checkBackendConnection();
         
         if (chatHistory.length === 0) {
             // Add initial welcome message (No Emojis)
@@ -109,7 +110,7 @@ import './chatbot.css';
                         </div>
                         <div class="header-text">
                             <h4>Fraylon Support</h4>
-                            <span>Typically replies in a few minutes</span>
+                            <span id="fraylonChatSubtext">Connecting to server...</span>
                         </div>
                     </div>
                     <button class="close-chat-btn" id="fraylonCloseChat" aria-label="Close chat window">
@@ -380,6 +381,50 @@ import './chatbot.css';
     async function sendMessage(text) {
         if (!text || text.trim() === '') return;
 
+        if (text.trim() === 'Retry connection') {
+            addUserMessage(text);
+            renderSuggestions([]);
+            const input = $('#fraylonChatInput');
+            if (input) input.disabled = true;
+            showTypingIndicator(true);
+            
+            await checkBackendConnection();
+            
+            const statusEl = $('#fraylonChatSubtext');
+            const isOnline = statusEl && statusEl.innerHTML.includes('Online');
+            
+            setTimeout(() => {
+                showTypingIndicator(false);
+                if (input) input.disabled = false;
+                if (isOnline) {
+                    addBotMessage("Connection successfully established! How can I help you today?", [
+                        "Help me choose a plan",
+                        "What plans do you have?",
+                        "Do you offer free migration?"
+                    ]);
+                } else {
+                    addBotMessage("Still unable to reach the support server. Please make sure you are running 'npm run dev' which now spawns both the frontend and backend servers together.", [
+                        "Retry connection",
+                        "Main Menu"
+                    ]);
+                }
+            }, 1000);
+            return;
+        }
+
+        if (text.trim() === 'Main Menu' || text.trim() === 'Restart Guide') {
+            addUserMessage(text);
+            renderSuggestions([]);
+            chatState = { wizardStep: null, websites: null, nodejs: null };
+            persistSession();
+            addBotMessage("Welcome to Fraylon Hosting support. How can I assist you with your web hosting needs today?", [
+                "Help me choose a plan",
+                "What plans do you have?",
+                "Do you offer free migration?"
+            ]);
+            return;
+        }
+
         addUserMessage(text);
         renderSuggestions([]);
 
@@ -447,6 +492,29 @@ import './chatbot.css';
                 "I'm having trouble connecting to the support server. Please make sure the local server is running or contact support@fraylon.com.",
                 ["Retry connection", "Main Menu"]
             );
+        }
+    }
+
+    async function checkBackendConnection(retries = 3) {
+        const statusEl = $('#fraylonChatSubtext');
+        if (!statusEl) return;
+        try {
+            const res = await fetch('/api/health');
+            if (res.ok) {
+                statusEl.innerHTML = '<span style="color:#10b981; font-weight:700;">● Online</span> • typically replies instantly';
+            } else {
+                if (retries > 0) {
+                    setTimeout(() => checkBackendConnection(retries - 1), 2000);
+                } else {
+                    statusEl.innerHTML = '<span style="color:#ef4444; font-weight:700;">● Server Error</span> • check database';
+                }
+            }
+        } catch (e) {
+            if (retries > 0) {
+                setTimeout(() => checkBackendConnection(retries - 1), 2000);
+            } else {
+                statusEl.innerHTML = '<span style="color:#f59e0b; font-weight:700;">● Offline</span> • please start server';
+            }
         }
     }
 

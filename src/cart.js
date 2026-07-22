@@ -313,9 +313,26 @@ function wireCheckoutButton() {
         setBusy(true);
         setStatus('');
         try {
+            const userStr = localStorage.getItem('fraylon_user');
+            let customerObj = undefined;
+            if (userStr) {
+                try {
+                    const parsed = JSON.parse(userStr);
+                    if (parsed && parsed.email) {
+                        customerObj = {
+                            email: parsed.email.toLowerCase().trim(),
+                            name: parsed.name || 'Customer'
+                        };
+                    }
+                } catch (e) {
+                    console.error('[cart] Failed to read auth user:', e);
+                }
+            }
+
             await startCheckout({
                 planId: state.planId,
                 durationMonths: state.durationMonths,
+                customer: customerObj,
                 notes: state.coupon ? { coupon: state.coupon } : undefined,
                 onSuccess: (v) => {
                     console.log('Payment verified, redirecting to success');
