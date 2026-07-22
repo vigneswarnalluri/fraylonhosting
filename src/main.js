@@ -957,29 +957,65 @@ import './chatbot.js';
 
     function attachFormHandler(form, onSubmit, statusEl) {
         if (!form) return;
-        form.addEventListener('submit', (e) => {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const data = Object.fromEntries(new FormData(form).entries());
-            const result = onSubmit(data);
-            if (result.error) {
-                if (statusEl) { statusEl.textContent = result.error; statusEl.className = 'form-status error'; }
-                showToast(result.error, 'error');
-                return;
+            
+            if (statusEl) {
+                statusEl.textContent = 'Processing request...';
+                statusEl.className = 'form-status info';
             }
-            if (statusEl) { statusEl.textContent = result.success || 'Done.'; statusEl.className = 'form-status success'; }
-            showToast(result.success || 'Done.', 'success');
-            form.reset();
-            const modal = form.closest('.mw-modal-root');
-            if (modal) setTimeout(() => closeModal(modal), 1100);
+            
+            try {
+                const result = await onSubmit(data);
+                if (result.error) {
+                    if (statusEl) { statusEl.textContent = result.error; statusEl.className = 'form-status error'; }
+                    showToast(result.error, 'error');
+                    return;
+                }
+                if (statusEl) { statusEl.textContent = result.success || 'Done.'; statusEl.className = 'form-status success'; }
+                showToast(result.success || 'Done.', 'success');
+                form.reset();
+                const modal = form.closest('.mw-modal-root');
+                if (modal) setTimeout(() => closeModal(modal), 1100);
+            } catch (err) {
+                const errMsg = err.message || 'An error occurred. Please try again.';
+                if (statusEl) { statusEl.textContent = errMsg; statusEl.className = 'form-status error'; }
+                showToast(errMsg, 'error');
+            }
         });
     }
 
     function initForms() {
-        attachFormHandler($('#accountForm'), (data) => {
+        attachFormHandler($('#accountForm'), async (data) => {
             if (!isEmail(data.email)) return { error: 'Please enter a valid email address.' };
             if (!data.password || data.password.length < 4) return { error: 'Please enter your password.' };
-            const ok = window.fraylonHooks.onLogin(data);
-            return { success: ok || 'Welcome back! Routing you to your dashboard…' };
+            
+            try {
+                const res = await fetch('/api/user/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (!res.ok) {
+                    return { error: result.error || 'Invalid email or password.' };
+                }
+                
+                localStorage.setItem('fraylon_user', JSON.stringify({ 
+                    name: result.user.name, 
+                    email: result.user.email, 
+                    token: result.token 
+                }));
+                
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1000);
+                
+                return { success: 'Welcome back! Routing you to your dashboard…' };
+            } catch (err) {
+                return { error: 'Failed to connect to the authentication server.' };
+            }
         }, $('#accountFormStatus'));
 
         attachFormHandler($('#migrationForm'), (data) => {
@@ -1255,22 +1291,67 @@ import './chatbot.js';
         // Signup form handler
         const signupForm = $('#signupPageForm');
         if (signupForm) {
-            signupForm.addEventListener('submit', (e) => {
+            signupForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const nameInput = $('#suName');
                 const emailInput = $('#suEmail');
-                const name = nameInput ? nameInput.value.trim() : 'Customer';
-                const email = emailInput ? emailInput.value.trim() : 'user@company.com';
+                const passInput = $('#suPassword');
+                
+                const name = nameInput ? nameInput.value.trim() : '';
+                const email = emailInput ? emailInput.value.trim() : '';
+                const password = passInput ? passInput.value.trim() : '';
+                
+                if (!name || !email || !password) {
+                    showToast('Please fill in all fields.', 'error');
+                    return;
+                }
+                
+                if (password.length < 4) {
+                    showToast('Password must be at least 4 characters long.', 'error');
+                    return;
+                }
                 
                 const btn = signupForm.querySelector('button[type="submit"]');
-                if (btn) btn.textContent = 'Creating Account...';
-                setTimeout(() => {
-                    localStorage.setItem('fraylon_user', JSON.stringify({ name, email }));
+                const origText = btn ? btn.textContent : 'Sign Up';
+                if (btn) {
+                    btn.disabled = true;
+                    btn.textContent = 'Creating Account...';
+                }
+                
+                try {
+                    const res = await fetch('/api/user/signup', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, email, password })
+                    });
+                    const result = await res.json();
+                    
+                    if (!res.ok) {
+                        showToast(result.error || 'Failed to create account.', 'error');
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.textContent = origText;
+                        }
+                        return;
+                    }
+                    
+                    localStorage.setItem('fraylon_user', JSON.stringify({ 
+                        name: result.user.name, 
+                        email: result.user.email, 
+                        token: result.token 
+                    }));
+                    
                     showToast('Account created successfully! Welcome to Fraylon.');
                     setTimeout(() => {
                         window.location.href = 'dashboard.html';
                     }, 1000);
-                }, 1000);
+                } catch (err) {
+                    showToast('Connection to auth server failed.', 'error');
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.textContent = origText;
+                    }
+                }
             });
         }
 
@@ -1401,7 +1482,7 @@ import './chatbot.js';
                     c.style.display = c.id === `tab-${target}` ? 'block' : 'none';
                 });
                 if (target === 'billing') {
-                    fetchBillingInvoices(user.email);
+                    fetchBillingInvoices(user);
                 }
             });
         });
@@ -1657,7 +1738,11 @@ import './chatbot.js';
         const cntOrdersEl = $('#cntOrders');
         
         try {
-            const res = await fetch(`/api/user/orders?email=${encodeURIComponent(user.email)}`);
+            const res = await fetch(`/api/user/orders`, {
+                headers: {
+                    'Authorization': `Bearer ${user.token || ''}`
+                }
+            });
             if (!res.ok) throw new Error('API query failure');
             const data = await res.json();
             
@@ -1837,7 +1922,7 @@ import './chatbot.js';
         }
     }
 
-    async function fetchBillingInvoices(email) {
+    async function fetchBillingInvoices(user) {
         const tbody = $('#dbBillingTbody');
         const countOrdersEl = $('#cntOrders');
         if (!tbody) return;
@@ -1845,7 +1930,11 @@ import './chatbot.js';
         tbody.innerHTML = `<tr><td colspan="5" style="padding:32px 0; text-align:center; color:#64748b;"><i class="fas fa-spinner fa-spin" style="margin-right:8px;"></i> Querying database...</td></tr>`;
         
         try {
-            const res = await fetch(`/api/user/orders?email=${encodeURIComponent(email)}`);
+            const res = await fetch(`/api/user/orders`, {
+                headers: {
+                    'Authorization': `Bearer ${user.token || ''}`
+                }
+            });
             if (!res.ok) throw new Error('API query failure');
             const data = await res.json();
             

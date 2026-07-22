@@ -4,6 +4,7 @@
  */
 
 import pg from 'pg';
+import crypto from 'crypto';
 import { config } from '../config.js';
 import { logger } from './logger.js';
 
@@ -27,6 +28,16 @@ export function initDb() {
         const client = await pool.connect();
         try {
             logger.info('Initializing PostgreSQL database tables...');
+
+            // Create users table
+            await client.query(`
+                CREATE TABLE IF NOT EXISTS users (
+                    email VARCHAR(255) PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL,
+                    password_hash VARCHAR(255) NOT NULL,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                );
+            `);
 
             // Create orders table
             await client.query(`
@@ -213,6 +224,75 @@ export const paymentRepo = {
         return res.rows.map(hydratePayment);
     },
 };
+
+// ─────────────────── userRepo ───────────────────
+export const userRepo = {
+    async create(email, name, password) {
+        await ensureReady();
+        const pwdHash = hashPassword(password);
+        const query = `
+            INSERT INTO users (email, name, password_hash)
+            VALUES ($1, $2, $3)
+            RETURNING email, name
+        `;
+        const res = await pool.query(query, [email.toLowerCase().trim(), name, pwdHash]);
+        return res.rows[0];
+    },
+
+    async findByEmail(email) {
+        await ensureReady();
+        const res = await pool.query('SELECT * FROM users WHERE email = $1', [email.toLowerCase().trim()]);
+        return res.rows.length ? res.rows[0] : null;
+    }
+};
+
+// ─────────────────── Cryptographic Utilities ───────────────────
+export function hashPassword(password) {
+    const salt = crypto.randomBytes(16).toString('hex');
+    const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+    return `${salt}:${hash}`;
+}
+
+export function verifyPassword(password, storedHash) {
+    if (!storedHash || !storedHash.includes(':')) return false;
+    const parts = storedHash.split(':');
+    const salt = parts[0];
+    const originalHash = parts[1];
+    const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+    return hash === originalHash;
+}
+
+const TOKEN_SECRET = process.env.JWT_SECRET || 'fraylon-super-secret-key-12345!';
+
+export function generateToken(email) {
+    const payload = {
+        email,
+        expires: Date.now() + 30 * 24 * 60 * 60 * 1000 // 30 days
+    };
+    const payloadStr = Buffer.from(JSON.stringify(payload)).toString('base64url');
+    const signature = crypto.createHmac('sha256', TOKEN_SECRET).update(payloadStr).digest('base64url');
+    return `${payloadStr}.${signature}`;
+}
+
+export function verifyToken(token) {
+    if (!token) return null;
+    const parts = token.split('.');
+    if (parts.length !== 2) return null;
+    
+    const payloadStr = parts[0];
+    const signature = parts[1];
+    
+    const expectedSignature = crypto.createHmac('sha256', TOKEN_SECRET).update(payloadStr).digest('base64url');
+    if (signature !== expectedSignature) return null;
+    
+    try {
+        const payload = JSON.parse(Buffer.from(payloadStr, 'base64url').toString('utf8'));
+        if (payload.expires < Date.now()) return null; // Expired
+        return payload;
+    } catch (e) {
+        return null;
+    }
+}
 
 // Automatically trigger initialization when this module is imported.
 // In a serverless context, functions are warm/cached, and this will execute once per container.

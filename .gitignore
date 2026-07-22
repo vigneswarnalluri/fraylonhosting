@@ -40,3 +40,5 @@ server/data/*.db-shm
 .claude-flow
 .mcp.json
 CLAUDE.md
+pr_comments.txt
+
