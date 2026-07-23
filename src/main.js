@@ -1295,7 +1295,7 @@ import './chatbot.js';
                 e.preventDefault();
                 const nameInput = $('#suName');
                 const emailInput = $('#suEmail');
-                const passInput = $('#suPassword');
+                const passInput = $('#suPass');
                 
                 const name = nameInput ? nameInput.value.trim() : '';
                 const email = emailInput ? emailInput.value.trim() : '';
